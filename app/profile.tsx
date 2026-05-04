@@ -202,7 +202,7 @@ const styles = StyleSheet.create({
     fontWeight: 'bold',
   },
   settingsActionLabel: {
-    fontSize: 14,
+    fontSize: 16,
     fontWeight: 'bold',
     marginTop: 4,
   },

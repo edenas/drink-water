@@ -21,6 +21,7 @@ const activityLevelStorageKey = 'activityLevel';
 const waterAmountStorageKey = 'waterAmount';
 const allTimeWaterAmountStorageKey = 'allTimeWaterAmount';
 const waterHistoryStorageKey = 'waterHistory';
+const hourlyWaterHistoryStorageKey = 'hourlyWaterHistory';
 const lastSavedDateStorageKey = 'lastSavedDate';
 const notificationsEnabledStorageKey = 'notificationsEnabled';
 const notificationHoursStorageKey = 'notificationHours';
@@ -161,6 +162,7 @@ export default function SettingsScreen() {
       waterAmountStorageKey,
       allTimeWaterAmountStorageKey,
       waterHistoryStorageKey,
+      hourlyWaterHistoryStorageKey,
       lastSavedDateStorageKey,
     ]);
 
@@ -252,7 +254,7 @@ const styles = StyleSheet.create({
     paddingVertical: 10,
   },
   sectionLabel: {
-    fontSize: 14,
+    fontSize: 16,
     fontWeight: 'bold',
     marginTop: 24,
   },
@@ -275,7 +277,7 @@ const styles = StyleSheet.create({
     flex: 1,
   },
   reminderInputLabel: {
-    fontSize: 14,
+    fontSize: 16,
     fontWeight: 'bold',
     marginBottom: 6,
   },

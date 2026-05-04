@@ -23,7 +23,7 @@ const styles = StyleSheet.create({
   },
   buttonText: {
     color: '#ffffff',
-    fontSize: 18,
+    fontSize: 16,
     fontWeight: 'bold',
   },
 });

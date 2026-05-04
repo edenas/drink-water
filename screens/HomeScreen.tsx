@@ -21,6 +21,7 @@ const maxWaterStepAmount = 1000;
 const waterAmountStorageKey = 'waterAmount';
 const allTimeWaterAmountStorageKey = 'allTimeWaterAmount';
 const waterHistoryStorageKey = 'waterHistory';
+const hourlyWaterHistoryStorageKey = 'hourlyWaterHistory';
 const lastSavedDateStorageKey = 'lastSavedDate';
 const weightStorageKey = 'weight';
 const genderStorageKey = 'gender';
@@ -36,6 +37,9 @@ export default function HomeScreen() {
   const [waterAmount, setWaterAmount] = useState(0);
   const [allTimeWaterAmount, setAllTimeWaterAmount] = useState(0);
   const [waterHistory, setWaterHistory] = useState<Record<string, number>>({});
+  const [hourlyWaterHistory, setHourlyWaterHistory] = useState<
+    Record<string, Record<string, number>>
+  >({});
   const [waterStepAmount, setWaterStepAmount] = useState(30);
   const [dailyGoal, setDailyGoal] = useState(defaultDailyGoal);
   const [lastSavedDate, setLastSavedDate] = useState<string | null>(null);
@@ -60,6 +64,9 @@ export default function HomeScreen() {
     const savedWaterHistory = await AsyncStorage.getItem(
       waterHistoryStorageKey
     );
+    const savedHourlyWaterHistory = await AsyncStorage.getItem(
+      hourlyWaterHistoryStorageKey
+    );
     const savedWeight = await AsyncStorage.getItem(weightStorageKey);
     const savedGender = await AsyncStorage.getItem(genderStorageKey);
     const savedActivityLevel = await AsyncStorage.getItem(
@@ -83,6 +90,11 @@ export default function HomeScreen() {
     );
     setWaterHistory(
       savedWaterHistory !== null ? JSON.parse(savedWaterHistory) : {}
+    );
+    setHourlyWaterHistory(
+      savedHourlyWaterHistory !== null
+        ? JSON.parse(savedHourlyWaterHistory)
+        : {}
     );
 
     setWaterStepAmount(getDefaultWaterStepAmount(savedGender));
@@ -137,6 +149,17 @@ export default function HomeScreen() {
 
     AsyncStorage.setItem(waterHistoryStorageKey, JSON.stringify(waterHistory));
   }, [hasLoadedStorage, waterHistory]);
+
+  useEffect(() => {
+    if (!hasLoadedStorage) {
+      return;
+    }
+
+    AsyncStorage.setItem(
+      hourlyWaterHistoryStorageKey,
+      JSON.stringify(hourlyWaterHistory)
+    );
+  }, [hasLoadedStorage, hourlyWaterHistory]);
 
   const scheduleNotifications = async () => {
     const savedNotificationHours = await AsyncStorage.getItem(
@@ -232,12 +255,22 @@ export default function HomeScreen() {
   const waterStatus = getWaterStatus(waterAmount, dailyGoal);
   const addWater = () => {
     const today = getTodayDate();
+    const currentHour = String(new Date().getHours());
 
     setWaterAmount(waterAmount + waterStepAmount);
     setAllTimeWaterAmount(allTimeWaterAmount + waterStepAmount);
     setWaterHistory({
       ...waterHistory,
       [today]: (waterHistory[today] || 0) + waterStepAmount,
+    });
+    setHourlyWaterHistory({
+      ...hourlyWaterHistory,
+      [today]: {
+        ...(hourlyWaterHistory[today] || {}),
+        [currentHour]:
+          ((hourlyWaterHistory[today] || {})[currentHour] || 0) +
+          waterStepAmount,
+      },
     });
   };
 
@@ -307,7 +340,7 @@ const styles = StyleSheet.create({
     gap: 6,
   },
   notificationToggleText: {
-    fontSize: 12,
+    fontSize: 14,
     fontWeight: 'bold',
   },
   title: {
@@ -342,7 +375,7 @@ const styles = StyleSheet.create({
     marginBottom: 20,
   },
   statusText: {
-    fontSize: 18,
+    fontSize: 22,
     fontWeight: 'bold',
     marginBottom: 10,
   },
