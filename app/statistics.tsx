@@ -104,18 +104,19 @@ const getLatestYearChartData = (waterHistory: Record<string, number>) => {
 };
 
 const ChartSwipeHint = () => (
-  <Text style={styles.chartSwipeHint}>← Swipe sideways →</Text>
+  <Text style={styles.chartSwipeHint}>{'\u2190 Swipe sideways \u2192'}</Text>
 );
 
 const chartConfig = {
-  backgroundGradientFrom: '#ffffff',
-  backgroundGradientTo: '#ffffff',
+  backgroundGradientFrom: '#F8FDFF',
+  backgroundGradientTo: '#F8FDFF',
   barPercentage: 0.52,
-  color: (opacity = 1) => `rgba(0, 174, 239, ${opacity})`,
+  color: (opacity = 1) => `rgba(0, 151, 211, ${opacity})`,
   decimalPlaces: 1,
-  labelColor: (opacity = 1) => `rgba(30, 45, 54, ${opacity})`,
+  labelColor: (opacity = 1) => `rgba(36, 86, 106, ${opacity})`,
   propsForBackgroundLines: {
-    stroke: '#D7EEF7',
+    stroke: '#DCEFF7',
+    strokeDasharray: '4 6',
   },
 };
 
@@ -443,22 +444,22 @@ const styles = StyleSheet.create({
   },
   title: {
     color: '#173B4A',
-    fontSize: 34,
-    fontWeight: 'bold',
-    marginBottom: 20,
+    fontSize: 32,
+    fontWeight: '700',
+    marginBottom: 22,
   },
   chart: {
     borderRadius: 18,
-    marginVertical: 6,
+    marginVertical: 8,
   },
   chartCard: {
-    backgroundColor: 'rgba(255, 255, 255, 0.94)',
-    borderRadius: 22,
+    backgroundColor: 'rgba(255, 255, 255, 0.95)',
+    borderRadius: 24,
     elevation: 4,
-    marginBottom: 28,
+    marginBottom: 30,
     overflow: 'hidden',
-    paddingHorizontal: 8,
-    paddingVertical: 18,
+    paddingHorizontal: 10,
+    paddingVertical: 20,
     shadowColor: '#6CAFD0',
     shadowOffset: {
       width: 0,
@@ -468,27 +469,34 @@ const styles = StyleSheet.create({
     shadowRadius: 18,
   },
   chartScrollContent: {
-    paddingLeft: 8,
-    paddingRight: 48,
+    paddingLeft: 10,
+    paddingRight: 52,
   },
   chartSwipeHint: {
-    color: '#5E7886',
+    alignSelf: 'center',
+    backgroundColor: '#F4FBFF',
+    borderColor: '#D4EEF8',
+    borderRadius: 999,
+    borderWidth: 1,
+    color: '#6B7C85',
     fontSize: 12,
     fontWeight: '600',
-    marginBottom: 4,
-    marginTop: 10,
+    marginBottom: 2,
+    marginTop: 12,
+    paddingHorizontal: 12,
+    paddingVertical: 5,
     textAlign: 'center',
   },
   statRow: {
     flexDirection: 'row',
     justifyContent: 'space-between',
     alignItems: 'center',
-    backgroundColor: 'rgba(255, 255, 255, 0.92)',
-    borderRadius: 20,
+    backgroundColor: 'rgba(255, 255, 255, 0.94)',
+    borderRadius: 22,
     elevation: 3,
-    marginBottom: 16,
+    marginBottom: 18,
     paddingHorizontal: 20,
-    paddingVertical: 18,
+    paddingVertical: 20,
     shadowColor: '#6CAFD0',
     shadowOffset: {
       width: 0,
@@ -499,12 +507,13 @@ const styles = StyleSheet.create({
   },
   statLabel: {
     color: '#24566A',
-    fontSize: 18,
-    fontWeight: 'bold',
+    fontSize: 17,
+    fontWeight: '700',
   },
   statValue: {
-    fontSize: 20,
-    fontWeight: 'bold',
     color: '#007FB1',
+    fontSize: 22,
+    fontWeight: '700',
   },
 });
+
