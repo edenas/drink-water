@@ -1,5 +1,4 @@
 import AsyncStorage from '@react-native-async-storage/async-storage';
-import * as Notifications from 'expo-notifications';
 import { useFocusEffect } from 'expo-router';
 import { useCallback, useEffect, useRef, useState } from 'react';
 import {
@@ -7,7 +6,6 @@ import {
   Keyboard,
   LayoutChangeEvent,
   PanResponder,
-  Platform,
   Pressable,
   StyleSheet,
   Text,
@@ -22,6 +20,10 @@ import WaterBackgroundAnimation, {
 } from '@/components/WaterBackgroundAnimation';
 import WaterButton from '@/components/WaterButton';
 import { calculateDailyWaterGoal } from '@/logic/waterCalculator';
+import {
+  canUseLocalNotifications,
+  getNotificationsModule,
+} from '@/logic/notifications';
 import { getWaterStatus } from '@/logic/waterStatus';
 
 const defaultDailyGoal = 2000;
@@ -205,7 +207,13 @@ export default function HomeScreen() {
   }, [hasLoadedStorage, hourlyWaterHistory]);
 
   const scheduleNotifications = async () => {
-    if (Platform.OS === 'web') {
+    if (!canUseLocalNotifications) {
+      return;
+    }
+
+    const Notifications = getNotificationsModule();
+
+    if (Notifications === null) {
       return;
     }
 
@@ -251,7 +259,9 @@ export default function HomeScreen() {
     await AsyncStorage.setItem(notificationsEnabledStorageKey, String(value));
 
     if (!value) {
-      if (Platform.OS !== 'web') {
+      const Notifications = getNotificationsModule();
+
+      if (Notifications !== null) {
         await Notifications.cancelAllScheduledNotificationsAsync();
       }
       return;

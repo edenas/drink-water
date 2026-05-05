@@ -1,5 +1,4 @@
 import { Ionicons } from '@expo/vector-icons';
-import * as Notifications from 'expo-notifications';
 import { Tabs } from 'expo-router';
 import { useEffect, useState } from 'react';
 import {
@@ -9,12 +8,20 @@ import {
   Platform,
   StyleSheet,
   Text,
+  ViewStyle,
   View,
 } from 'react-native';
+import {
+  SafeAreaProvider,
+  useSafeAreaInsets,
+} from 'react-native-safe-area-context';
 
 import ScreenBackground from '@/components/ScreenBackground';
+import { getNotificationsModule } from '@/logic/notifications';
 
-if (Platform.OS !== 'web') {
+const Notifications = getNotificationsModule();
+
+if (Notifications !== null) {
   Notifications.setNotificationHandler({
     handleNotification: async () => ({
       shouldShowAlert: true,
@@ -26,7 +33,17 @@ if (Platform.OS !== 'web') {
   });
 }
 
-export default function Layout() {
+function TabsLayout() {
+  const insets = useSafeAreaInsets();
+  const bottomInset = insets.bottom;
+  const bottomPadding = bottomInset > 0 ? bottomInset : 8;
+  const tabBarHeight = 56 + bottomPadding;
+  const tabIconTranslateY =
+    Platform.OS === 'ios' && bottomInset > 0 ? 5 : 0;
+  const tabIconContainerStyle: ViewStyle =
+    tabIconTranslateY > 0
+      ? { transform: [{ translateY: tabIconTranslateY }] }
+      : {};
   const [startupPhase, setStartupPhase] = useState<'splash' | 'app'>('splash');
   const splashOpacity = useState(() => new Animated.Value(1))[0];
   const appOpacity = useState(() => new Animated.Value(0))[0];
@@ -76,12 +93,19 @@ export default function Layout() {
           tabBarActiveTintColor: '#00AEEF',
           tabBarInactiveTintColor: '#7D9AAA',
           tabBarShowLabel: false,
+          tabBarItemStyle: {
+            alignItems: 'center',
+            justifyContent: 'center',
+            paddingBottom: 0,
+            paddingTop: 0,
+          },
           tabBarStyle: {
             backgroundColor: 'rgba(255, 255, 255, 0.96)',
             borderTopWidth: 0,
             elevation: 10,
-            height: 64,
-            paddingTop: 8,
+            height: tabBarHeight,
+            paddingBottom: bottomPadding,
+            paddingTop: 6,
             shadowColor: '#6CAFD0',
             shadowOffset: {
               width: 0,
@@ -104,7 +128,9 @@ export default function Layout() {
           options={{
             title: 'Home',
             tabBarIcon: ({ color, size }) => (
-              <Ionicons name="home" color={color} size={size} />
+              <View style={tabIconContainerStyle}>
+                <Ionicons name="home" color={color} size={size} />
+              </View>
             ),
           }}
         />
@@ -113,7 +139,9 @@ export default function Layout() {
           options={{
             title: 'Statistics',
             tabBarIcon: ({ color, size }) => (
-              <Ionicons name="stats-chart" color={color} size={size} />
+              <View style={tabIconContainerStyle}>
+                <Ionicons name="stats-chart" color={color} size={size} />
+              </View>
             ),
           }}
         />
@@ -122,7 +150,9 @@ export default function Layout() {
           options={{
             title: 'Profile',
             tabBarIcon: ({ color, size }) => (
-              <Ionicons name="person" color={color} size={size} />
+              <View style={tabIconContainerStyle}>
+                <Ionicons name="person" color={color} size={size} />
+              </View>
             ),
           }}
         />
@@ -131,7 +161,9 @@ export default function Layout() {
           options={{
             title: 'Settings',
             tabBarIcon: ({ color, size }) => (
-              <Ionicons name="settings" color={color} size={size} />
+              <View style={tabIconContainerStyle}>
+                <Ionicons name="settings" color={color} size={size} />
+              </View>
             ),
           }}
         />
@@ -165,6 +197,14 @@ export default function Layout() {
         />
       </Tabs>
     </Animated.View>
+  );
+}
+
+export default function Layout() {
+  return (
+    <SafeAreaProvider>
+      <TabsLayout />
+    </SafeAreaProvider>
   );
 }
 

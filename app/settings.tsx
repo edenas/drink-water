@@ -1,5 +1,4 @@
 import AsyncStorage from '@react-native-async-storage/async-storage';
-import * as Notifications from 'expo-notifications';
 import { router, useFocusEffect } from 'expo-router';
 import { useCallback, useEffect, useRef, useState } from 'react';
 import {
@@ -7,7 +6,6 @@ import {
   Image,
   Keyboard,
   Linking,
-  Platform,
   Pressable,
   ScrollView,
   StyleSheet,
@@ -23,6 +21,10 @@ import WaterBackgroundAnimation, {
   WaterBackgroundAnimationRef,
 } from '@/components/WaterBackgroundAnimation';
 import { appButtonStyles } from '@/constants/buttonStyles';
+import {
+  canUseLocalNotifications,
+  getNotificationsModule,
+} from '@/logic/notifications';
 
 const weightStorageKey = 'weight';
 const ageStorageKey = 'age';
@@ -145,7 +147,13 @@ export default function SettingsScreen() {
       return false;
     }
 
-    if (Platform.OS === 'web') {
+    if (!canUseLocalNotifications) {
+      return true;
+    }
+
+    const Notifications = getNotificationsModule();
+
+    if (Notifications === null) {
       return true;
     }
 
@@ -177,7 +185,9 @@ export default function SettingsScreen() {
     await AsyncStorage.setItem(notificationsEnabledStorageKey, String(value));
 
     if (!value) {
-      if (Platform.OS !== 'web') {
+      const Notifications = getNotificationsModule();
+
+      if (Notifications !== null) {
         await Notifications.cancelAllScheduledNotificationsAsync();
       }
       setSaveMessage('\u2713 Water reminder disabled');
@@ -199,7 +209,9 @@ export default function SettingsScreen() {
     );
 
     if (!notificationsEnabled) {
-      if (Platform.OS !== 'web') {
+      const Notifications = getNotificationsModule();
+
+      if (Notifications !== null) {
         await Notifications.cancelAllScheduledNotificationsAsync();
       }
       setSaveMessage('\u2713 Water reminder saved');
