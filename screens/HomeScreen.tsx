@@ -30,8 +30,13 @@ const notificationsEnabledStorageKey = 'notificationsEnabled';
 const notificationHoursStorageKey = 'notificationHours';
 const notificationMinutesStorageKey = 'notificationMinutes';
 
-const getDefaultWaterStepAmount = (gender: string | null) =>
-  gender === 'male' ? 35 : 30;
+const getDefaultWaterStepAmount = (gender: string | null) => {
+  if (gender === 'male') {
+    return 35;
+  }
+
+  return 30;
+};
 
 export default function HomeScreen() {
   const [waterAmount, setWaterAmount] = useState(0);
@@ -297,7 +302,10 @@ export default function HomeScreen() {
       <Text style={[styles.statusText, { color: waterStatus.statusColor }]}>
         {waterStatus.statusText}
       </Text>
-      <Text style={styles.sliderValue}>{waterStepAmount} ml</Text>
+      <View style={styles.selectedAmount}>
+        <Text style={styles.selectedAmountLabel}>Selected amount</Text>
+        <Text style={styles.selectedAmountValue}>{waterStepAmount} ml</Text>
+      </View>
 
       <View
         style={styles.slider}
@@ -309,10 +317,7 @@ export default function HomeScreen() {
         <View style={[styles.sliderThumb, { left: sliderFillWidth }]} />
       </View>
 
-      <WaterButton
-        label={`+${waterStepAmount} ml`}
-        onPress={addWater}
-      />
+      <WaterButton label="Add water" onPress={addWater} />
     </View>
   );
 }
@@ -379,10 +384,19 @@ const styles = StyleSheet.create({
     fontWeight: 'bold',
     marginBottom: 10,
   },
-  sliderValue: {
-    fontSize: 18,
+  selectedAmount: {
+    alignItems: 'center',
     marginTop: 10,
     marginBottom: 10,
+  },
+  selectedAmountLabel: {
+    fontSize: 14,
+    fontWeight: 'bold',
+    marginBottom: 4,
+  },
+  selectedAmountValue: {
+    fontSize: 22,
+    fontWeight: 'bold',
   },
   slider: {
     width: 240,
