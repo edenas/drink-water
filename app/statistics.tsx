@@ -7,7 +7,6 @@ import {
   StyleSheet,
   Text,
   useWindowDimensions,
-  View,
 } from 'react-native';
 import { BarChart } from 'react-native-chart-kit';
 import { SafeAreaView } from 'react-native-safe-area-context';
@@ -242,19 +241,16 @@ export default function StatisticsScreen() {
     loadWaterData();
   }, [loadWaterData]);
 
-  useEffect(() => {
-    chartCardsAnimation.setValue(0);
-    Animated.timing(chartCardsAnimation, {
-      toValue: 1,
-      duration: 420,
-      useNativeDriver: true,
-    }).start();
-  }, [chartCardsAnimation, todayChart, weeklyChart, monthlyChart, yearlyChart, allTimeChart]);
-
   useFocusEffect(
     useCallback(() => {
       loadWaterData();
-    }, [loadWaterData])
+      chartCardsAnimation.setValue(0);
+      Animated.timing(chartCardsAnimation, {
+        toValue: 1,
+        duration: 420,
+        useNativeDriver: true,
+      }).start();
+    }, [chartCardsAnimation, loadWaterData])
   );
 
   const formatLiters = (amount: number) => `${(amount / 1000).toFixed(2)} L`;
@@ -276,7 +272,7 @@ export default function StatisticsScreen() {
   const isYearlyChartScrollable = yearlyChartWidth > chartVisibleWidth;
   const isAllTimeChartScrollable =
     allTimeChart.labels.length > 5 && allTimeChartWidth > chartVisibleWidth;
-  const animatedChartCardStyle = {
+  const animatedCardStyle = {
     opacity: chartCardsAnimation,
     transform: [
       {
@@ -288,7 +284,7 @@ export default function StatisticsScreen() {
       {
         scale: chartCardsAnimation.interpolate({
           inputRange: [0, 1],
-          outputRange: [0.98, 1],
+          outputRange: [0.97, 1],
         }),
       },
     ],
@@ -300,12 +296,12 @@ export default function StatisticsScreen() {
         <ScrollView contentContainerStyle={styles.content}>
         <Text style={styles.title}>Statistics</Text>
 
-        <View style={styles.statRow}>
+        <Animated.View style={[styles.statRow, animatedCardStyle]}>
           <Text style={styles.statLabel}>Today</Text>
           <Text style={styles.statValue}>{formatLiters(stats.today)}</Text>
-        </View>
+        </Animated.View>
 
-        <Animated.View style={[styles.chartCard, animatedChartCardStyle]}>
+        <Animated.View style={[styles.chartCard, animatedCardStyle]}>
           <ScrollView
             horizontal
             contentContainerStyle={styles.chartScrollContent}
@@ -329,12 +325,12 @@ export default function StatisticsScreen() {
           {isHourlyChartScrollable && <ChartSwipeHint />}
         </Animated.View>
 
-        <View style={styles.statRow}>
+        <Animated.View style={[styles.statRow, animatedCardStyle]}>
           <Text style={styles.statLabel}>This week</Text>
           <Text style={styles.statValue}>{formatLiters(stats.week)}</Text>
-        </View>
+        </Animated.View>
 
-        <Animated.View style={[styles.chartCard, animatedChartCardStyle]}>
+        <Animated.View style={[styles.chartCard, animatedCardStyle]}>
           <ScrollView
             horizontal
             contentContainerStyle={styles.chartScrollContent}
@@ -358,12 +354,12 @@ export default function StatisticsScreen() {
           {isWeeklyChartScrollable && <ChartSwipeHint />}
         </Animated.View>
 
-        <View style={styles.statRow}>
+        <Animated.View style={[styles.statRow, animatedCardStyle]}>
           <Text style={styles.statLabel}>This month</Text>
           <Text style={styles.statValue}>{formatLiters(stats.month)}</Text>
-        </View>
+        </Animated.View>
 
-        <Animated.View style={[styles.chartCard, animatedChartCardStyle]}>
+        <Animated.View style={[styles.chartCard, animatedCardStyle]}>
           <ScrollView
             horizontal
             contentContainerStyle={styles.chartScrollContent}
@@ -387,12 +383,12 @@ export default function StatisticsScreen() {
           {isMonthlyChartScrollable && <ChartSwipeHint />}
         </Animated.View>
 
-        <View style={styles.statRow}>
+        <Animated.View style={[styles.statRow, animatedCardStyle]}>
           <Text style={styles.statLabel}>This year</Text>
           <Text style={styles.statValue}>{formatLiters(stats.year)}</Text>
-        </View>
+        </Animated.View>
 
-        <Animated.View style={[styles.chartCard, animatedChartCardStyle]}>
+        <Animated.View style={[styles.chartCard, animatedCardStyle]}>
           <ScrollView
             horizontal
             contentContainerStyle={styles.chartScrollContent}
@@ -416,13 +412,13 @@ export default function StatisticsScreen() {
           {isYearlyChartScrollable && <ChartSwipeHint />}
         </Animated.View>
 
-        <View style={styles.statRow}>
+        <Animated.View style={[styles.statRow, animatedCardStyle]}>
           <Text style={styles.statLabel}>All time</Text>
           <Text style={styles.statValue}>{formatLiters(stats.allTime)}</Text>
-        </View>
+        </Animated.View>
 
         {allTimeChart.labels.length > 0 && (
-          <Animated.View style={[styles.chartCard, animatedChartCardStyle]}>
+          <Animated.View style={[styles.chartCard, animatedCardStyle]}>
             {isAllTimeChartScrollable ? (
               <ScrollView
                 horizontal

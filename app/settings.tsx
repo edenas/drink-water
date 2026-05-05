@@ -1,7 +1,10 @@
 import AsyncStorage from '@react-native-async-storage/async-storage';
 import * as Notifications from 'expo-notifications';
-import { useEffect, useRef, useState } from 'react';
+import { router, useFocusEffect } from 'expo-router';
+import { useCallback, useEffect, useRef, useState } from 'react';
 import {
+  Animated,
+  Image,
   Keyboard,
   Platform,
   Pressable,
@@ -12,7 +15,6 @@ import {
   TextInput,
   View,
 } from 'react-native';
-import { router } from 'expo-router';
 import { SafeAreaView } from 'react-native-safe-area-context';
 
 import ScreenBackground from '@/components/ScreenBackground';
@@ -57,6 +59,7 @@ export default function SettingsScreen() {
   const [notificationHours, setNotificationHours] = useState('1');
   const [notificationMinutes, setNotificationMinutes] = useState('0');
   const [saveMessage, setSaveMessage] = useState('');
+  const entranceAnimation = useRef(new Animated.Value(0)).current;
   const waterAnimationRef = useRef<WaterBackgroundAnimationRef>(null);
 
   useEffect(() => {
@@ -86,6 +89,35 @@ export default function SettingsScreen() {
 
     loadSettings();
   }, []);
+
+  useFocusEffect(
+    useCallback(() => {
+      entranceAnimation.setValue(0);
+      Animated.timing(entranceAnimation, {
+        toValue: 1,
+        duration: 420,
+        useNativeDriver: true,
+      }).start();
+    }, [entranceAnimation])
+  );
+
+  const entranceAnimatedStyle = {
+    opacity: entranceAnimation,
+    transform: [
+      {
+        translateY: entranceAnimation.interpolate({
+          inputRange: [0, 1],
+          outputRange: [10, 0],
+        }),
+      },
+      {
+        scale: entranceAnimation.interpolate({
+          inputRange: [0, 1],
+          outputRange: [0.97, 1],
+        }),
+      },
+    ],
+  };
 
   const handleNotificationHoursChange = (value: string) => {
     setNotificationHours(value.replace(/\D/g, ''));
@@ -211,6 +243,18 @@ export default function SettingsScreen() {
     router.push('/support');
   };
 
+  const handleDisclaimerPress = () => {
+    router.push('/disclaimer');
+  };
+
+  const handleHowToUsePress = () => {
+    router.push('/how-to-use');
+  };
+
+  const handlePrivacyPolicyPress = () => {
+    router.push('/privacy-policy');
+  };
+
   return (
     <ScreenBackground>
       <WaterBackgroundAnimation ref={waterAnimationRef} />
@@ -223,7 +267,7 @@ export default function SettingsScreen() {
         >
           <Text style={styles.title}>Settings</Text>
 
-          <View style={styles.card}>
+          <Animated.View style={[styles.card, entranceAnimatedStyle]}>
             <Text style={styles.sectionLabel}>Water reminder</Text>
             <View style={styles.reminderToggleRow}>
               <Text style={styles.reminderLabel}>
@@ -264,30 +308,55 @@ export default function SettingsScreen() {
               label="Save"
               onPress={handleSaveNotifications}
             />
-          </View>
+          </Animated.View>
 
-          <View style={styles.card}>
+          <Animated.View style={[styles.card, entranceAnimatedStyle]}>
             <Text style={styles.sectionLabel}>Statistics data</Text>
             <SettingsButton
               label="Clear statistics"
               onPress={handleClearStatistics}
             />
-          </View>
+          </Animated.View>
 
-          <View style={styles.card}>
+          <Animated.View style={[styles.card, entranceAnimatedStyle]}>
             <Text style={styles.sectionLabel}>User settings</Text>
             <SettingsButton
               label="Clear user settings"
               onPress={handleClearUserSettings}
             />
-          </View>
+          </Animated.View>
 
           <Text style={styles.saveMessage}>{saveMessage}</Text>
 
-          <View style={[styles.card, styles.donationCard]}>
-            <Text style={styles.sectionLabel}>
-              {'Support this app \u2764\ufe0f'}
-            </Text>
+          <Animated.View style={[styles.card, entranceAnimatedStyle]}>
+            <Text style={styles.sectionLabel}>App information</Text>
+            <SettingsButton
+              label="Disclaimer"
+              onPress={handleDisclaimerPress}
+            />
+            <SettingsButton
+              label="How to use"
+              onPress={handleHowToUsePress}
+            />
+            <SettingsButton
+              label="Privacy Policy"
+              onPress={handlePrivacyPolicyPress}
+            />
+          </Animated.View>
+
+          <Animated.View
+            style={[styles.card, styles.donationCard, entranceAnimatedStyle]}
+          >
+            <View style={styles.supportTitleRow}>
+              <Text style={styles.sectionLabel}>Support this app</Text>
+              <View style={styles.supportTitleIconBadge}>
+                <Image
+                  source={require('../assets/kofi_symbol.png')}
+                  resizeMode="contain"
+                  style={styles.supportTitleIcon}
+                />
+              </View>
+            </View>
             <Text style={styles.sectionDescription}>
               If you enjoy using this app, you can support the developer.
             </Text>
@@ -295,7 +364,7 @@ export default function SettingsScreen() {
               label="Support / Donate"
               onPress={handleSupportPress}
             />
-          </View>
+          </Animated.View>
         </ScrollView>
       </SafeAreaView>
     </ScreenBackground>
@@ -356,6 +425,34 @@ const styles = StyleSheet.create({
   },
   donationCard: {
     marginTop: 16,
+  },
+  supportTitleIcon: {
+    height: 21,
+    opacity: 0.9,
+    width: 21,
+  },
+  supportTitleIconBadge: {
+    alignItems: 'center',
+    backgroundColor: 'rgba(244, 251, 255, 0.92)',
+    borderColor: 'rgba(212, 238, 248, 0.95)',
+    borderRadius: 999,
+    borderWidth: 1,
+    elevation: 2,
+    height: 30,
+    justifyContent: 'center',
+    marginLeft: 8,
+    shadowColor: '#6CAFD0',
+    shadowOffset: {
+      width: 0,
+      height: 4,
+    },
+    shadowOpacity: 0.1,
+    shadowRadius: 8,
+    width: 30,
+  },
+  supportTitleRow: {
+    alignItems: 'center',
+    flexDirection: 'row',
   },
   button: {
     backgroundColor: '#00AEEF',

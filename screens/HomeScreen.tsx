@@ -72,6 +72,7 @@ export default function HomeScreen() {
   const panStartWaterStepAmountRef = useRef(30);
   const progressAnimation = useRef(new Animated.Value(0)).current;
   const notificationToggleAnimation = useRef(new Animated.Value(0)).current;
+  const entranceAnimation = useRef(new Animated.Value(0)).current;
   const waterAnimationRef = useRef<WaterBackgroundAnimationRef>(null);
 
   const getTodayDate = () => new Date().toISOString().split('T')[0];
@@ -153,7 +154,13 @@ export default function HomeScreen() {
   useFocusEffect(
     useCallback(() => {
       loadSavedValues();
-    }, [loadSavedValues])
+      entranceAnimation.setValue(0);
+      Animated.timing(entranceAnimation, {
+        toValue: 1,
+        duration: 420,
+        useNativeDriver: true,
+      }).start();
+    }, [entranceAnimation, loadSavedValues])
   );
 
   useEffect(() => {
@@ -343,6 +350,24 @@ export default function HomeScreen() {
     }).start();
   }, [notificationToggleAnimation, notificationsEnabled]);
 
+  const entranceAnimatedStyle = {
+    opacity: entranceAnimation,
+    transform: [
+      {
+        translateY: entranceAnimation.interpolate({
+          inputRange: [0, 1],
+          outputRange: [10, 0],
+        }),
+      },
+      {
+        scale: entranceAnimation.interpolate({
+          inputRange: [0, 1],
+          outputRange: [0.97, 1],
+        }),
+      },
+    ],
+  };
+
   const addWater = () => {
     const today = getTodayDate();
     const currentHour = String(new Date().getHours());
@@ -383,7 +408,9 @@ export default function HomeScreen() {
           },
         ]}
       >
-        <View style={styles.notificationToggle}>
+        <Animated.View
+          style={[styles.notificationToggle, entranceAnimatedStyle]}
+        >
           <Text style={styles.notificationToggleLabel}>
             Water{'\n'}Reminder
           </Text>
@@ -420,9 +447,9 @@ export default function HomeScreen() {
               </Animated.View>
             </Pressable>
           </View>
-        </View>
+        </Animated.View>
 
-        <View style={styles.card}>
+        <Animated.View style={[styles.card, entranceAnimatedStyle]}>
           <Text style={styles.title}>Today</Text>
           <Text style={styles.waterAmountText}>{waterAmount} ml</Text>
           <Text style={styles.subtitle}>Daily goal: {dailyGoal} ml</Text>
@@ -435,9 +462,9 @@ export default function HomeScreen() {
           <Text style={[styles.statusText, { color: waterStatus.statusColor }]}>
             {waterStatus.statusText}
           </Text>
-        </View>
+        </Animated.View>
 
-        <View style={styles.card}>
+        <Animated.View style={[styles.card, entranceAnimatedStyle]}>
           <View style={styles.selectedAmountPill}>
             <Text style={styles.selectedAmountLabel}>Selected amount</Text>
             <View style={styles.selectedAmountInputRow}>
@@ -466,7 +493,7 @@ export default function HomeScreen() {
           </View>
 
           <WaterButton label="Add water" onPress={addWater} />
-        </View>
+        </Animated.View>
       </View>
     </ScreenBackground>
   );

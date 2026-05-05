@@ -2,6 +2,7 @@ import AsyncStorage from '@react-native-async-storage/async-storage';
 import { useFocusEffect } from 'expo-router';
 import { useCallback, useRef, useState } from 'react';
 import {
+  Animated,
   Keyboard,
   ScrollView,
   StyleSheet,
@@ -31,6 +32,7 @@ export default function ProfileScreen() {
   const [activityLevel, setActivityLevel] = useState<string | null>(null);
   const [saveMessage, setSaveMessage] = useState('');
   const [hasSavedSettings, setHasSavedSettings] = useState(false);
+  const entranceAnimation = useRef(new Animated.Value(0)).current;
   const waterAnimationRef = useRef<WaterBackgroundAnimationRef>(null);
 
   useFocusEffect(
@@ -56,8 +58,32 @@ export default function ProfileScreen() {
       };
 
       loadSettings();
-    }, [])
+      entranceAnimation.setValue(0);
+      Animated.timing(entranceAnimation, {
+        toValue: 1,
+        duration: 420,
+        useNativeDriver: true,
+      }).start();
+    }, [entranceAnimation])
   );
+
+  const entranceAnimatedStyle = {
+    opacity: entranceAnimation,
+    transform: [
+      {
+        translateY: entranceAnimation.interpolate({
+          inputRange: [0, 1],
+          outputRange: [10, 0],
+        }),
+      },
+      {
+        scale: entranceAnimation.interpolate({
+          inputRange: [0, 1],
+          outputRange: [0.97, 1],
+        }),
+      },
+    ],
+  };
 
   const handleSave = async () => {
     waterAnimationRef.current?.trigger();
@@ -98,7 +124,7 @@ export default function ProfileScreen() {
           >
             <Text style={styles.title}>Profile</Text>
 
-            <View style={styles.card}>
+            <Animated.View style={[styles.card, entranceAnimatedStyle]}>
               <Text style={styles.label}>Weight</Text>
               <TextInput
                 style={styles.input}
@@ -215,7 +241,7 @@ export default function ProfileScreen() {
                 onPress={handleSave}
               />
               <Text style={styles.saveMessage}>{saveMessage}</Text>
-            </View>
+            </Animated.View>
           </ScrollView>
         </SafeAreaView>
       </ScreenBackground>

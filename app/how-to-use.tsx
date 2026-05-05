@@ -2,51 +2,53 @@ import { router, useFocusEffect } from 'expo-router';
 import { useCallback, useRef } from 'react';
 import {
   Animated,
-  Image,
-  Linking,
   Pressable,
   ScrollView,
   StyleSheet,
   Text,
+  View,
 } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 
 import ScreenBackground from '@/components/ScreenBackground';
 
-const kofiUrl = 'https://ko-fi.com/edenaspocius';
+const sections = [
+  {
+    title: 'Profile',
+    text: 'Set weight, gender, activity level, and optional age.',
+  },
+  {
+    title: 'Home',
+    text: 'Choose or type water amount and press Add water.',
+  },
+  {
+    title: 'Statistics',
+    text: 'Review daily, weekly, monthly, yearly, and all-time progress.',
+  },
+  {
+    title: 'Settings',
+    text: 'Manage reminders, clear data, and access support/info pages.',
+  },
+];
 
-type SupportButtonProps = {
-  label: string;
-  onPress: () => void;
-  variant?: 'primary' | 'secondary';
-};
-
-function SupportButton({
-  label,
-  onPress,
-  variant = 'primary',
-}: SupportButtonProps) {
-  const isSecondary = variant === 'secondary';
-
+function InfoButton({ label, onPress }: { label: string; onPress: () => void }) {
   return (
     <Pressable
       style={({ pressed }) => [
         styles.button,
-        isSecondary && styles.secondaryButton,
+        styles.secondaryButton,
         pressed && styles.buttonPressed,
       ]}
       onPress={onPress}
     >
-      <Text
-        style={[styles.buttonText, isSecondary && styles.secondaryButtonText]}
-      >
+      <Text style={[styles.buttonText, styles.secondaryButtonText]}>
         {label}
       </Text>
     </Pressable>
   );
 }
 
-export default function SupportScreen() {
+export default function HowToUseScreen() {
   const entranceAnimation = useRef(new Animated.Value(0)).current;
 
   const handleBackPress = () => {
@@ -82,49 +84,31 @@ export default function SupportScreen() {
     ],
   };
 
-  const openKofi = () => {
-    Linking.openURL(kofiUrl);
-  };
-
   return (
     <ScreenBackground>
       <SafeAreaView style={styles.container}>
         <ScrollView contentContainerStyle={styles.content}>
-          <SupportButton
-            label="Back"
-            onPress={handleBackPress}
-            variant="secondary"
-          />
+          <InfoButton label="Back" onPress={handleBackPress} />
 
           <Animated.View style={[styles.card, entranceAnimatedStyle]}>
-            <Image
-              source={require('../assets/kofi_logo.png')}
-              resizeMode="contain"
-              style={styles.kofiLogo}
-            />
-            <Text style={styles.title}>Support this app</Text>
-            <Text style={styles.message}>
-              If you enjoy using Drink Water, you can support the developer and
-              help improve the app.
-            </Text>
-            <Text style={styles.smallLine}>
-              Every coffee helps
+            <Text style={styles.title}>How to use</Text>
+            <Text style={styles.bodyText}>
+              Use this app to track your daily water intake, set your profile
+              information, view your daily progress, check statistics, and
+              enable optional water reminder notifications.
+              {'\n\n'}
+              The app helps you stay aware of your hydration habits, but it
+              should not replace professional medical advice.
             </Text>
 
-            <Pressable
-              style={({ pressed }) => [
-                styles.kofiButton,
-                pressed && styles.kofiButtonPressed,
-              ]}
-              onPress={openKofi}
-            >
-              <Image
-                source={require('../assets/support_me_on_kofi_beige.png')}
-                resizeMode="contain"
-                style={styles.kofiButtonImage}
-              />
-            </Pressable>
-            <Text style={styles.trustText}>Secure payment via Ko-fi</Text>
+            <View style={styles.sectionList}>
+              {sections.map((section) => (
+                <View key={section.title} style={styles.infoSection}>
+                  <Text style={styles.sectionTitle}>{section.title}</Text>
+                  <Text style={styles.sectionText}>{section.text}</Text>
+                </View>
+              ))}
+            </View>
           </Animated.View>
         </ScrollView>
       </SafeAreaView>
@@ -137,18 +121,16 @@ const styles = StyleSheet.create({
     flex: 1,
   },
   content: {
-    flexGrow: 1,
-    justifyContent: 'center',
     padding: 20,
     paddingBottom: 80,
   },
   card: {
-    alignItems: 'center',
     backgroundColor: 'rgba(255, 255, 255, 0.92)',
-    borderRadius: 28,
+    borderRadius: 24,
     elevation: 4,
     marginTop: 18,
-    padding: 24,
+    paddingHorizontal: 22,
+    paddingVertical: 28,
     shadowColor: '#6CAFD0',
     shadowOffset: {
       width: 0,
@@ -157,63 +139,46 @@ const styles = StyleSheet.create({
     shadowOpacity: 0.14,
     shadowRadius: 18,
   },
-  kofiLogo: {
-    height: 56,
-    marginBottom: 16,
-    maxWidth: 220,
-    width: '62%',
-  },
   title: {
     color: '#173B4A',
     fontSize: 32,
-    fontWeight: 'bold',
-    marginBottom: 14,
-    textAlign: 'center',
+    fontWeight: '700',
+    marginBottom: 18,
   },
-  message: {
+  bodyText: {
     color: '#24566A',
-    fontSize: 17,
-    fontWeight: '600',
+    fontSize: 16,
+    fontWeight: '500',
     lineHeight: 24,
-    textAlign: 'center',
   },
-  smallLine: {
-    color: '#007FB1',
+  sectionList: {
+    gap: 12,
+    marginTop: 22,
+  },
+  infoSection: {
+    backgroundColor: '#F4FBFF',
+    borderColor: '#D4EEF8',
+    borderRadius: 18,
+    borderWidth: 1,
+    paddingHorizontal: 16,
+    paddingVertical: 14,
+  },
+  sectionTitle: {
+    color: '#173B4A',
     fontSize: 17,
-    fontWeight: 'bold',
-    marginBottom: 8,
-    marginTop: 16,
-    textAlign: 'center',
+    fontWeight: '700',
+    marginBottom: 6,
   },
-  kofiButton: {
-    alignItems: 'center',
-    alignSelf: 'center',
-    height: 72,
-    justifyContent: 'center',
-    marginTop: 14,
-    maxWidth: 320,
-    width: '100%',
-  },
-  kofiButtonImage: {
-    height: 72,
-    maxWidth: 320,
-    width: '100%',
-  },
-  kofiButtonPressed: {
-    opacity: 0.82,
-    transform: [{ scale: 0.97 }],
-  },
-  trustText: {
+  sectionText: {
     color: '#5E7886',
-    fontSize: 14,
-    fontWeight: '600',
-    marginTop: 12,
+    fontSize: 15,
+    fontWeight: '500',
+    lineHeight: 21,
   },
   button: {
     backgroundColor: '#00AEEF',
     borderRadius: 18,
     elevation: 4,
-    marginTop: 18,
     minHeight: 50,
     paddingHorizontal: 24,
     paddingVertical: 14,
@@ -224,7 +189,6 @@ const styles = StyleSheet.create({
     },
     shadowOpacity: 0.18,
     shadowRadius: 12,
-    width: '100%',
   },
   buttonPressed: {
     backgroundColor: '#009DD8',
@@ -232,7 +196,7 @@ const styles = StyleSheet.create({
   buttonText: {
     color: '#ffffff',
     fontSize: 17,
-    fontWeight: 'bold',
+    fontWeight: '700',
     letterSpacing: 0,
     textAlign: 'center',
   },
@@ -240,13 +204,11 @@ const styles = StyleSheet.create({
     alignSelf: 'flex-start',
     backgroundColor: 'rgba(255, 255, 255, 0.92)',
     elevation: 2,
-    marginTop: 0,
     minHeight: 0,
     paddingHorizontal: 16,
     paddingVertical: 10,
     shadowColor: '#6CAFD0',
     shadowOpacity: 0.12,
-    width: 'auto',
   },
   secondaryButtonText: {
     color: '#24566A',

@@ -142,6 +142,27 @@ export default function Layout() {
             title: 'Support',
           }}
         />
+        <Tabs.Screen
+          name="disclaimer"
+          options={{
+            href: null,
+            title: 'Disclaimer',
+          }}
+        />
+        <Tabs.Screen
+          name="how-to-use"
+          options={{
+            href: null,
+            title: 'How to use',
+          }}
+        />
+        <Tabs.Screen
+          name="privacy-policy"
+          options={{
+            href: null,
+            title: 'Privacy Policy',
+          }}
+        />
       </Tabs>
     </Animated.View>
   );
