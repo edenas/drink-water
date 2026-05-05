@@ -10,6 +10,7 @@ import {
 import { SafeAreaView } from 'react-native-safe-area-context';
 
 import ScreenBackground from '@/components/ScreenBackground';
+import { appButtonStyles } from '@/constants/buttonStyles';
 
 function InfoButton({ label, onPress }: { label: string; onPress: () => void }) {
   return (
@@ -143,42 +144,20 @@ const styles = StyleSheet.create({
     lineHeight: 24,
   },
   button: {
-    backgroundColor: '#00AEEF',
-    borderRadius: 18,
-    elevation: 4,
-    minHeight: 50,
+    ...appButtonStyles.primaryButton,
+    marginTop: 0,
     paddingHorizontal: 24,
-    paddingVertical: 14,
-    shadowColor: '#0087BD',
-    shadowOffset: {
-      width: 0,
-      height: 8,
-    },
-    shadowOpacity: 0.18,
-    shadowRadius: 12,
   },
   buttonPressed: {
-    backgroundColor: '#009DD8',
+    ...appButtonStyles.primaryButtonPressed,
   },
   buttonText: {
-    color: '#ffffff',
-    fontSize: 17,
-    fontWeight: '700',
-    letterSpacing: 0,
-    textAlign: 'center',
+    ...appButtonStyles.primaryButtonText,
   },
   secondaryButton: {
-    alignSelf: 'flex-start',
-    backgroundColor: 'rgba(255, 255, 255, 0.92)',
-    elevation: 2,
-    minHeight: 0,
-    paddingHorizontal: 16,
-    paddingVertical: 10,
-    shadowColor: '#6CAFD0',
-    shadowOpacity: 0.12,
+    ...appButtonStyles.secondaryButton,
   },
   secondaryButtonText: {
-    color: '#24566A',
-    fontSize: 15,
+    ...appButtonStyles.secondaryButtonText,
   },
 });

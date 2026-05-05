@@ -6,6 +6,7 @@ import {
   Animated,
   Image,
   Keyboard,
+  Linking,
   Platform,
   Pressable,
   ScrollView,
@@ -21,6 +22,7 @@ import ScreenBackground from '@/components/ScreenBackground';
 import WaterBackgroundAnimation, {
   WaterBackgroundAnimationRef,
 } from '@/components/WaterBackgroundAnimation';
+import { appButtonStyles } from '@/constants/buttonStyles';
 
 const weightStorageKey = 'weight';
 const ageStorageKey = 'age';
@@ -34,6 +36,7 @@ const lastSavedDateStorageKey = 'lastSavedDate';
 const notificationsEnabledStorageKey = 'notificationsEnabled';
 const notificationHoursStorageKey = 'notificationHours';
 const notificationMinutesStorageKey = 'notificationMinutes';
+const kofiUrl = 'https://ko-fi.com/edenaspocius';
 
 type SettingsButtonProps = {
   label: string;
@@ -240,7 +243,7 @@ export default function SettingsScreen() {
   };
 
   const handleSupportPress = () => {
-    router.push('/support');
+    Linking.openURL(kofiUrl);
   };
 
   const handleDisclaimerPress = () => {
@@ -347,23 +350,31 @@ export default function SettingsScreen() {
           <Animated.View
             style={[styles.card, styles.donationCard, entranceAnimatedStyle]}
           >
-            <View style={styles.supportTitleRow}>
-              <Text style={styles.sectionLabel}>Support this app</Text>
-              <View style={styles.supportTitleIconBadge}>
-                <Image
-                  source={require('../assets/kofi_symbol.png')}
-                  resizeMode="contain"
-                  style={styles.supportTitleIcon}
-                />
-              </View>
-            </View>
-            <Text style={styles.sectionDescription}>
-              If you enjoy using this app, you can support the developer.
-            </Text>
-            <SettingsButton
-              label="Support / Donate"
-              onPress={handleSupportPress}
+            <Image
+              source={require('../assets/kofi_logo.png')}
+              resizeMode="contain"
+              style={styles.kofiLogo}
             />
+            <Text style={styles.supportTitle}>Support this app</Text>
+            <Text style={styles.supportMessage}>
+              If you enjoy using Drink Water, you can support the developer and
+              help improve the app.
+            </Text>
+            <Text style={styles.supportHighlight}>Every coffee helps</Text>
+            <Pressable
+              style={({ pressed }) => [
+                styles.kofiButton,
+                pressed && styles.kofiButtonPressed,
+              ]}
+              onPress={handleSupportPress}
+            >
+              <Image
+                source={require('../assets/support_me_on_kofi_beige.png')}
+                resizeMode="contain"
+                style={styles.kofiButtonImage}
+              />
+            </Pressable>
+            <Text style={styles.supportFooter}>Secure payment via Ko-fi</Text>
           </Animated.View>
         </ScrollView>
       </SafeAreaView>
@@ -417,68 +428,71 @@ const styles = StyleSheet.create({
     fontSize: 19,
     fontWeight: '700',
   },
-  sectionDescription: {
-    color: '#6B7C85',
-    fontSize: 16,
-    lineHeight: 22,
-    marginTop: 12,
-  },
   donationCard: {
+    alignItems: 'center',
     marginTop: 16,
   },
-  supportTitleIcon: {
-    height: 21,
-    opacity: 0.9,
-    width: 21,
+  kofiLogo: {
+    height: 56,
+    marginBottom: 16,
+    maxWidth: 200,
+    width: '62%',
   },
-  supportTitleIconBadge: {
-    alignItems: 'center',
-    backgroundColor: 'rgba(244, 251, 255, 0.92)',
-    borderColor: 'rgba(212, 238, 248, 0.95)',
-    borderRadius: 999,
-    borderWidth: 1,
-    elevation: 2,
-    height: 30,
-    justifyContent: 'center',
-    marginLeft: 8,
-    shadowColor: '#6CAFD0',
-    shadowOffset: {
-      width: 0,
-      height: 4,
-    },
-    shadowOpacity: 0.1,
-    shadowRadius: 8,
-    width: 30,
+  supportTitle: {
+    color: '#173B4A',
+    fontSize: 28,
+    fontWeight: '700',
+    marginBottom: 14,
+    textAlign: 'center',
   },
-  supportTitleRow: {
-    alignItems: 'center',
-    flexDirection: 'row',
+  supportMessage: {
+    color: '#24566A',
+    fontSize: 16,
+    fontWeight: '600',
+    lineHeight: 23,
+    textAlign: 'center',
   },
-  button: {
-    backgroundColor: '#00AEEF',
-    borderRadius: 18,
-    elevation: 4,
-    marginTop: 18,
-    minHeight: 50,
-    paddingHorizontal: 28,
-    paddingVertical: 14,
-    shadowColor: '#0087BD',
-    shadowOffset: {
-      width: 0,
-      height: 8,
-    },
-    shadowOpacity: 0.18,
-    shadowRadius: 12,
-  },
-  buttonPressed: {
-    backgroundColor: '#009DD8',
-  },
-  buttonText: {
-    color: '#ffffff',
+  supportHighlight: {
+    color: '#007FB1',
     fontSize: 17,
     fontWeight: '700',
-    letterSpacing: 0,
+    marginBottom: 8,
+    marginTop: 16,
     textAlign: 'center',
+  },
+  kofiButton: {
+    alignItems: 'center',
+    alignSelf: 'center',
+    height: 72,
+    justifyContent: 'center',
+    marginTop: 14,
+    maxWidth: 300,
+    width: '100%',
+  },
+  kofiButtonImage: {
+    height: 72,
+    maxWidth: 300,
+    width: '100%',
+  },
+  kofiButtonPressed: {
+    opacity: 0.82,
+    transform: [{ scale: 0.97 }],
+  },
+  supportFooter: {
+    color: '#5E7886',
+    fontSize: 14,
+    fontWeight: '600',
+    marginTop: 12,
+    textAlign: 'center',
+  },
+  button: {
+    ...appButtonStyles.primaryButton,
+  },
+  buttonPressed: {
+    ...appButtonStyles.primaryButtonPressed,
+  },
+  buttonText: {
+    ...appButtonStyles.primaryButtonText,
   },
   reminderToggleRow: {
     backgroundColor: '#F4FBFF',

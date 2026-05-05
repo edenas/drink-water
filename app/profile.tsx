@@ -1,9 +1,10 @@
 import AsyncStorage from '@react-native-async-storage/async-storage';
 import { useFocusEffect } from 'expo-router';
-import { useCallback, useRef, useState } from 'react';
+import { useCallback, useEffect, useRef, useState } from 'react';
 import {
   Animated,
   Keyboard,
+  Platform,
   ScrollView,
   StyleSheet,
   Text,
@@ -58,14 +59,17 @@ export default function ProfileScreen() {
       };
 
       loadSettings();
-      entranceAnimation.setValue(0);
-      Animated.timing(entranceAnimation, {
-        toValue: 1,
-        duration: 420,
-        useNativeDriver: true,
-      }).start();
-    }, [entranceAnimation])
+    }, [])
   );
+
+  useEffect(() => {
+    entranceAnimation.setValue(0);
+    Animated.timing(entranceAnimation, {
+      toValue: 1,
+      duration: 420,
+      useNativeDriver: true,
+    }).start();
+  }, [entranceAnimation]);
 
   const entranceAnimatedStyle = {
     opacity: entranceAnimation,
@@ -113,138 +117,146 @@ export default function ProfileScreen() {
     setActivityLevel(value);
   };
 
+  const profileContent = (
+    <ScreenBackground>
+      <WaterBackgroundAnimation ref={waterAnimationRef} />
+      <SafeAreaView style={styles.container}>
+        <ScrollView
+          contentContainerStyle={styles.content}
+          keyboardShouldPersistTaps="handled"
+        >
+          <Text style={styles.title}>Profile</Text>
+
+          <Animated.View style={[styles.card, entranceAnimatedStyle]}>
+            <Text style={styles.label}>Weight</Text>
+            <TextInput
+              style={styles.input}
+              keyboardType="numeric"
+              value={weight}
+              onChangeText={setWeight}
+              placeholder="Enter weight"
+              placeholderTextColor="#8AA7B6"
+            />
+
+            <Text style={styles.label}>Age</Text>
+            <TextInput
+              style={styles.input}
+              keyboardType="numeric"
+              value={age}
+              onChangeText={handleAgeChange}
+              placeholder="e.g. 30"
+              placeholderTextColor="#8AA7B6"
+            />
+
+            <Text style={styles.label}>Gender</Text>
+            <View style={styles.options}>
+              <TouchableOpacity
+                style={[
+                  styles.option,
+                  gender === 'male' && styles.selectedOption,
+                ]}
+                onPress={() => handleGenderPress('male')}
+              >
+                <Text
+                  style={[
+                    styles.optionText,
+                    gender === 'male' && styles.selectedOptionText,
+                  ]}
+                >
+                  Male
+                </Text>
+              </TouchableOpacity>
+              <TouchableOpacity
+                style={[
+                  styles.option,
+                  gender === 'female' && styles.selectedOption,
+                ]}
+                onPress={() => handleGenderPress('female')}
+              >
+                <Text
+                  style={[
+                    styles.optionText,
+                    gender === 'female' && styles.selectedOptionText,
+                  ]}
+                >
+                  Female
+                </Text>
+              </TouchableOpacity>
+            </View>
+
+            <Text style={styles.label}>Activity level</Text>
+            <View style={styles.options}>
+              <TouchableOpacity
+                style={[
+                  styles.option,
+                  activityLevel === 'low' && styles.selectedOption,
+                ]}
+                onPress={() => handleActivityLevelPress('low')}
+              >
+                <Text
+                  style={[
+                    styles.optionText,
+                    activityLevel === 'low' && styles.selectedOptionText,
+                  ]}
+                >
+                  Low
+                </Text>
+              </TouchableOpacity>
+              <TouchableOpacity
+                style={[
+                  styles.option,
+                  activityLevel === 'medium' && styles.selectedOption,
+                ]}
+                onPress={() => handleActivityLevelPress('medium')}
+              >
+                <Text
+                  style={[
+                    styles.optionText,
+                    activityLevel === 'medium' && styles.selectedOptionText,
+                  ]}
+                >
+                  Medium
+                </Text>
+              </TouchableOpacity>
+              <TouchableOpacity
+                style={[
+                  styles.option,
+                  activityLevel === 'high' && styles.selectedOption,
+                ]}
+                onPress={() => handleActivityLevelPress('high')}
+              >
+                <Text
+                  style={[
+                    styles.optionText,
+                    activityLevel === 'high' && styles.selectedOptionText,
+                  ]}
+                >
+                  High
+                </Text>
+              </TouchableOpacity>
+            </View>
+
+            <Text style={styles.settingsActionLabel}>
+              {hasSavedSettings ? 'Update settings' : 'Save settings'}
+            </Text>
+            <WaterButton
+              label={hasSavedSettings ? 'Update' : 'Save'}
+              onPress={handleSave}
+            />
+            <Text style={styles.saveMessage}>{saveMessage}</Text>
+          </Animated.View>
+        </ScrollView>
+      </SafeAreaView>
+    </ScreenBackground>
+  );
+
+  if (Platform.OS === 'web') {
+    return profileContent;
+  }
+
   return (
     <TouchableWithoutFeedback onPress={Keyboard.dismiss} accessible={false}>
-      <ScreenBackground>
-        <WaterBackgroundAnimation ref={waterAnimationRef} />
-        <SafeAreaView style={styles.container}>
-          <ScrollView
-            contentContainerStyle={styles.content}
-            keyboardShouldPersistTaps="handled"
-          >
-            <Text style={styles.title}>Profile</Text>
-
-            <Animated.View style={[styles.card, entranceAnimatedStyle]}>
-              <Text style={styles.label}>Weight</Text>
-              <TextInput
-                style={styles.input}
-                keyboardType="numeric"
-                value={weight}
-                onChangeText={setWeight}
-                placeholder="Enter weight"
-                placeholderTextColor="#8AA7B6"
-              />
-
-              <Text style={styles.label}>Age</Text>
-              <TextInput
-                style={styles.input}
-                keyboardType="numeric"
-                value={age}
-                onChangeText={handleAgeChange}
-                placeholder="e.g. 30"
-                placeholderTextColor="#8AA7B6"
-              />
-
-              <Text style={styles.label}>Gender</Text>
-              <View style={styles.options}>
-                <TouchableOpacity
-                  style={[
-                    styles.option,
-                    gender === 'male' && styles.selectedOption,
-                  ]}
-                  onPress={() => handleGenderPress('male')}
-                >
-                  <Text
-                    style={[
-                      styles.optionText,
-                      gender === 'male' && styles.selectedOptionText,
-                    ]}
-                  >
-                    Male
-                  </Text>
-                </TouchableOpacity>
-                <TouchableOpacity
-                  style={[
-                    styles.option,
-                    gender === 'female' && styles.selectedOption,
-                  ]}
-                  onPress={() => handleGenderPress('female')}
-                >
-                  <Text
-                    style={[
-                      styles.optionText,
-                      gender === 'female' && styles.selectedOptionText,
-                    ]}
-                  >
-                    Female
-                  </Text>
-                </TouchableOpacity>
-              </View>
-
-              <Text style={styles.label}>Activity level</Text>
-              <View style={styles.options}>
-                <TouchableOpacity
-                  style={[
-                    styles.option,
-                    activityLevel === 'low' && styles.selectedOption,
-                  ]}
-                  onPress={() => handleActivityLevelPress('low')}
-                >
-                  <Text
-                    style={[
-                      styles.optionText,
-                      activityLevel === 'low' && styles.selectedOptionText,
-                    ]}
-                  >
-                    Low
-                  </Text>
-                </TouchableOpacity>
-                <TouchableOpacity
-                  style={[
-                    styles.option,
-                    activityLevel === 'medium' && styles.selectedOption,
-                  ]}
-                  onPress={() => handleActivityLevelPress('medium')}
-                >
-                  <Text
-                    style={[
-                      styles.optionText,
-                      activityLevel === 'medium' && styles.selectedOptionText,
-                    ]}
-                  >
-                    Medium
-                  </Text>
-                </TouchableOpacity>
-                <TouchableOpacity
-                  style={[
-                    styles.option,
-                    activityLevel === 'high' && styles.selectedOption,
-                  ]}
-                  onPress={() => handleActivityLevelPress('high')}
-                >
-                  <Text
-                    style={[
-                      styles.optionText,
-                      activityLevel === 'high' && styles.selectedOptionText,
-                    ]}
-                  >
-                    High
-                  </Text>
-                </TouchableOpacity>
-              </View>
-
-              <Text style={styles.settingsActionLabel}>
-                {hasSavedSettings ? 'Update settings' : 'Save settings'}
-              </Text>
-              <WaterButton
-                label={hasSavedSettings ? 'Update' : 'Save'}
-                onPress={handleSave}
-              />
-              <Text style={styles.saveMessage}>{saveMessage}</Text>
-            </Animated.View>
-          </ScrollView>
-        </SafeAreaView>
-      </ScreenBackground>
+      {profileContent}
     </TouchableWithoutFeedback>
   );
 }
