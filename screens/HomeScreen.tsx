@@ -7,13 +7,14 @@ import {
   Keyboard,
   LayoutChangeEvent,
   PanResponder,
+  Platform,
+  Pressable,
   StyleSheet,
-  Switch,
   Text,
   TextInput,
   View,
 } from 'react-native';
-import { SafeAreaView } from 'react-native-safe-area-context';
+import { useSafeAreaInsets } from 'react-native-safe-area-context';
 
 import ScreenBackground from '@/components/ScreenBackground';
 import WaterBackgroundAnimation, {
@@ -48,6 +49,9 @@ const getDefaultWaterStepAmount = (gender: string | null) => {
 };
 
 export default function HomeScreen() {
+  const insets = useSafeAreaInsets();
+  const topContentInset = Math.max(insets.top * 0.35, 12);
+  const bottomContentInset = Math.max(insets.bottom, 28);
   const [waterAmount, setWaterAmount] = useState(0);
   const [allTimeWaterAmount, setAllTimeWaterAmount] = useState(0);
   const [waterHistory, setWaterHistory] = useState<Record<string, number>>({});
@@ -67,6 +71,7 @@ export default function HomeScreen() {
   const waterStepAmountRef = useRef(30);
   const panStartWaterStepAmountRef = useRef(30);
   const progressAnimation = useRef(new Animated.Value(0)).current;
+  const notificationToggleAnimation = useRef(new Animated.Value(0)).current;
   const waterAnimationRef = useRef<WaterBackgroundAnimationRef>(null);
 
   const getTodayDate = () => new Date().toISOString().split('T')[0];
@@ -193,6 +198,10 @@ export default function HomeScreen() {
   }, [hasLoadedStorage, hourlyWaterHistory]);
 
   const scheduleNotifications = async () => {
+    if (Platform.OS === 'web') {
+      return;
+    }
+
     const savedNotificationHours = await AsyncStorage.getItem(
       notificationHoursStorageKey
     );
@@ -235,7 +244,9 @@ export default function HomeScreen() {
     await AsyncStorage.setItem(notificationsEnabledStorageKey, String(value));
 
     if (!value) {
-      await Notifications.cancelAllScheduledNotificationsAsync();
+      if (Platform.OS !== 'web') {
+        await Notifications.cancelAllScheduledNotificationsAsync();
+      }
       return;
     }
 
@@ -324,6 +335,14 @@ export default function HomeScreen() {
     }).start();
   }, [progressAnimation, progressPercent]);
 
+  useEffect(() => {
+    Animated.timing(notificationToggleAnimation, {
+      toValue: notificationsEnabled ? 1 : 0,
+      duration: 180,
+      useNativeDriver: true,
+    }).start();
+  }, [notificationToggleAnimation, notificationsEnabled]);
+
   const addWater = () => {
     const today = getTodayDate();
     const currentHour = String(new Date().getHours());
@@ -355,23 +374,54 @@ export default function HomeScreen() {
       }}
     >
       <WaterBackgroundAnimation ref={waterAnimationRef} />
-      <SafeAreaView style={styles.topSafeArea} edges={['top']}>
+      <View
+        style={[
+          styles.content,
+          {
+            paddingTop: topContentInset,
+            paddingBottom: bottomContentInset,
+          },
+        ]}
+      >
         <View style={styles.notificationToggle}>
-          <View style={styles.notificationToggleLabels}>
-            <Text style={styles.notificationToggleLabel}>Water reminder</Text>
-            <Text style={styles.notificationToggleText}>
-              {notificationsEnabled ? 'ON' : 'OFF'}
-            </Text>
+          <Text style={styles.notificationToggleLabel}>
+            Water{'\n'}Reminder
+          </Text>
+          <View style={styles.notificationSwitchWrapper}>
+            <Pressable
+              accessibilityRole="switch"
+              accessibilityState={{ checked: notificationsEnabled }}
+              onPress={() =>
+                handleNotificationsEnabledChange(!notificationsEnabled)
+              }
+              style={[
+                styles.notificationSwitchTrack,
+                notificationsEnabled && styles.notificationSwitchTrackOn,
+              ]}
+            >
+              <Animated.View
+                style={[
+                  styles.notificationSwitchThumb,
+                  {
+                    transform: [
+                      {
+                        translateX: notificationToggleAnimation.interpolate({
+                          inputRange: [0, 1],
+                          outputRange: [0, 20],
+                        }),
+                      },
+                    ],
+                  },
+                ]}
+              >
+                <Text style={styles.notificationToggleText}>
+                  {notificationsEnabled ? 'ON' : 'OFF'}
+                </Text>
+              </Animated.View>
+            </Pressable>
           </View>
-          <Switch
-            trackColor={{ false: '#D8E3EA', true: '#00AEEF' }}
-            thumbColor="#ffffff"
-            value={notificationsEnabled}
-            onValueChange={handleNotificationsEnabledChange}
-          />
         </View>
-      </SafeAreaView>
-      <View style={styles.content}>
+
         <View style={styles.card}>
           <Text style={styles.title}>Today</Text>
           <Text style={styles.waterAmountText}>{waterAmount} ml</Text>
@@ -427,20 +477,9 @@ const styles = StyleSheet.create({
     flex: 1,
     alignItems: 'center',
     paddingHorizontal: 20,
-    paddingTop: 112,
-    paddingBottom: 88,
-  },
-  topSafeArea: {
-    position: 'absolute',
-    top: 0,
-    left: 0,
-    right: 0,
-    zIndex: 1,
-    alignItems: 'flex-end',
-    paddingHorizontal: 16,
-    paddingTop: 14,
   },
   notificationToggle: {
+    alignSelf: 'flex-end',
     backgroundColor: 'rgba(255, 255, 255, 0.9)',
     borderColor: 'rgba(189, 238, 255, 0.9)',
     borderRadius: 22,
@@ -448,9 +487,10 @@ const styles = StyleSheet.create({
     elevation: 3,
     alignItems: 'center',
     flexDirection: 'row',
-    gap: 8,
+    gap: 12,
+    justifyContent: 'center',
     paddingHorizontal: 14,
-    paddingVertical: 8,
+    paddingVertical: 7,
     shadowColor: '#6CAFD0',
     shadowOffset: {
       width: 0,
@@ -459,19 +499,42 @@ const styles = StyleSheet.create({
     shadowOpacity: 0.14,
     shadowRadius: 14,
   },
-  notificationToggleLabels: {
-    alignItems: 'flex-end',
-  },
   notificationToggleLabel: {
     color: '#6B7C85',
-    fontSize: 12,
+    fontSize: 11,
     fontWeight: '500',
-    marginBottom: 2,
+    lineHeight: 13,
+    minWidth: 54,
+    textAlign: 'right',
+  },
+  notificationSwitchWrapper: {
+    alignItems: 'center',
+    justifyContent: 'center',
+  },
+  notificationSwitchTrack: {
+    backgroundColor: '#D8E3EA',
+    borderRadius: 16,
+    height: 32,
+    justifyContent: 'center',
+    padding: 2,
+    width: 52,
+  },
+  notificationSwitchTrackOn: {
+    backgroundColor: '#00AEEF',
+  },
+  notificationSwitchThumb: {
+    alignItems: 'center',
+    backgroundColor: '#ffffff',
+    borderRadius: 14,
+    height: 28,
+    justifyContent: 'center',
+    width: 28,
   },
   notificationToggleText: {
     color: '#007FB1',
-    fontSize: 14,
+    fontSize: 10,
     fontWeight: '700',
+    textAlign: 'center',
   },
   content: {
     flex: 1,

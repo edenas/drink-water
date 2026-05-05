@@ -3,6 +3,7 @@ import * as Notifications from 'expo-notifications';
 import { useEffect, useRef, useState } from 'react';
 import {
   Keyboard,
+  Platform,
   Pressable,
   ScrollView,
   StyleSheet,
@@ -109,6 +110,10 @@ export default function SettingsScreen() {
       return false;
     }
 
+    if (Platform.OS === 'web') {
+      return true;
+    }
+
     const permission = await Notifications.requestPermissionsAsync();
 
     if (!permission.granted) {
@@ -137,7 +142,9 @@ export default function SettingsScreen() {
     await AsyncStorage.setItem(notificationsEnabledStorageKey, String(value));
 
     if (!value) {
-      await Notifications.cancelAllScheduledNotificationsAsync();
+      if (Platform.OS !== 'web') {
+        await Notifications.cancelAllScheduledNotificationsAsync();
+      }
       setSaveMessage('\u2713 Water reminder disabled');
     }
   };
@@ -157,7 +164,9 @@ export default function SettingsScreen() {
     );
 
     if (!notificationsEnabled) {
-      await Notifications.cancelAllScheduledNotificationsAsync();
+      if (Platform.OS !== 'web') {
+        await Notifications.cancelAllScheduledNotificationsAsync();
+      }
       setSaveMessage('\u2713 Water reminder saved');
       return;
     }
