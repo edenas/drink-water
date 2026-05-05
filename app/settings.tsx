@@ -20,6 +20,7 @@ import WaterBackgroundAnimation, {
 } from '@/components/WaterBackgroundAnimation';
 
 const weightStorageKey = 'weight';
+const ageStorageKey = 'age';
 const genderStorageKey = 'gender';
 const activityLevelStorageKey = 'activityLevel';
 const waterAmountStorageKey = 'waterAmount';
@@ -174,6 +175,7 @@ export default function SettingsScreen() {
 
     await AsyncStorage.multiRemove([
       weightStorageKey,
+      ageStorageKey,
       genderStorageKey,
       activityLevelStorageKey,
     ]);

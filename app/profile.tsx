@@ -20,11 +20,13 @@ import WaterBackgroundAnimation, {
 import WaterButton from '@/components/WaterButton';
 
 const weightStorageKey = 'weight';
+const ageStorageKey = 'age';
 const genderStorageKey = 'gender';
 const activityLevelStorageKey = 'activityLevel';
 
 export default function ProfileScreen() {
   const [weight, setWeight] = useState('');
+  const [age, setAge] = useState('');
   const [gender, setGender] = useState<string | null>(null);
   const [activityLevel, setActivityLevel] = useState<string | null>(null);
   const [saveMessage, setSaveMessage] = useState('');
@@ -35,6 +37,7 @@ export default function ProfileScreen() {
     useCallback(() => {
       const loadSettings = async () => {
         const savedWeight = await AsyncStorage.getItem(weightStorageKey);
+        const savedAge = await AsyncStorage.getItem(ageStorageKey);
         const savedGender = await AsyncStorage.getItem(genderStorageKey);
         const savedActivityLevel = await AsyncStorage.getItem(
           activityLevelStorageKey
@@ -42,10 +45,12 @@ export default function ProfileScreen() {
 
         setHasSavedSettings(
           savedWeight !== null ||
+            savedAge !== null ||
             savedGender !== null ||
             savedActivityLevel !== null
         );
         setWeight(savedWeight ?? '');
+        setAge(savedAge ?? '');
         setGender(savedGender);
         setActivityLevel(savedActivityLevel);
       };
@@ -60,6 +65,7 @@ export default function ProfileScreen() {
     const message = hasSavedSettings ? '\u2713 Updated' : '\u2713 Saved';
 
     await AsyncStorage.setItem(weightStorageKey, weight);
+    await AsyncStorage.setItem(ageStorageKey, age);
     await AsyncStorage.setItem(genderStorageKey, gender || '');
     await AsyncStorage.setItem(activityLevelStorageKey, activityLevel || '');
 
@@ -70,6 +76,10 @@ export default function ProfileScreen() {
   const handleGenderPress = (value: string) => {
     Keyboard.dismiss();
     setGender(value);
+  };
+
+  const handleAgeChange = (value: string) => {
+    setAge(value.replace(/\D/g, ''));
   };
 
   const handleActivityLevelPress = (value: string) => {
@@ -96,6 +106,16 @@ export default function ProfileScreen() {
                 value={weight}
                 onChangeText={setWeight}
                 placeholder="Enter weight"
+                placeholderTextColor="#8AA7B6"
+              />
+
+              <Text style={styles.label}>Age</Text>
+              <TextInput
+                style={styles.input}
+                keyboardType="numeric"
+                value={age}
+                onChangeText={handleAgeChange}
+                placeholder="e.g. 30"
                 placeholderTextColor="#8AA7B6"
               />
 

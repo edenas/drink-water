@@ -4,7 +4,8 @@ type ActivityLevel = 'low' | 'medium' | 'high';
 export function calculateDailyWaterGoal(
   weight: string | number | null,
   gender: Gender | string | null,
-  activityLevel: ActivityLevel | string | null
+  activityLevel: ActivityLevel | string | null,
+  age?: string | number | null
 ) {
   if (!weight || !gender || !activityLevel) {
     return 2000;
@@ -16,15 +17,23 @@ export function calculateDailyWaterGoal(
     return 2000;
   }
 
-  const baseGoal = gender === 'female' ? weightNumber * 30 : weightNumber * 35;
+  let dailyGoal = gender === 'female' ? weightNumber * 30 : weightNumber * 35;
 
   if (activityLevel === 'medium') {
-    return baseGoal + 500;
+    dailyGoal += 500;
   }
 
   if (activityLevel === 'high') {
-    return baseGoal + 1000;
+    dailyGoal += 1000;
   }
 
-  return baseGoal;
+  const ageNumber = Number(age);
+
+  if (age !== null && age !== undefined && age !== '' && ageNumber >= 0) {
+    if (ageNumber < 18 || ageNumber >= 65) {
+      return Math.round(dailyGoal * 0.9);
+    }
+  }
+
+  return dailyGoal;
 }

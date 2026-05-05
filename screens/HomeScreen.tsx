@@ -32,6 +32,7 @@ const waterHistoryStorageKey = 'waterHistory';
 const hourlyWaterHistoryStorageKey = 'hourlyWaterHistory';
 const lastSavedDateStorageKey = 'lastSavedDate';
 const weightStorageKey = 'weight';
+const ageStorageKey = 'age';
 const genderStorageKey = 'gender';
 const activityLevelStorageKey = 'activityLevel';
 const notificationsEnabledStorageKey = 'notificationsEnabled';
@@ -86,6 +87,7 @@ export default function HomeScreen() {
       hourlyWaterHistoryStorageKey
     );
     const savedWeight = await AsyncStorage.getItem(weightStorageKey);
+    const savedAge = await AsyncStorage.getItem(ageStorageKey);
     const savedGender = await AsyncStorage.getItem(genderStorageKey);
     const savedActivityLevel = await AsyncStorage.getItem(
       activityLevelStorageKey
@@ -118,7 +120,12 @@ export default function HomeScreen() {
     setWaterStepAmount(getDefaultWaterStepAmount(savedGender));
 
     setDailyGoal(
-      calculateDailyWaterGoal(savedWeight, savedGender, savedActivityLevel)
+      calculateDailyWaterGoal(
+        savedWeight,
+        savedGender,
+        savedActivityLevel,
+        savedAge
+      )
     );
 
     setHasLoadedStorage(true);
@@ -419,8 +426,9 @@ const styles = StyleSheet.create({
   container: {
     flex: 1,
     alignItems: 'center',
-    justifyContent: 'center',
     paddingHorizontal: 20,
+    paddingTop: 112,
+    paddingBottom: 88,
   },
   topSafeArea: {
     position: 'absolute',
@@ -430,7 +438,7 @@ const styles = StyleSheet.create({
     zIndex: 1,
     alignItems: 'flex-end',
     paddingHorizontal: 16,
-    paddingTop: 12,
+    paddingTop: 14,
   },
   notificationToggle: {
     backgroundColor: 'rgba(255, 255, 255, 0.9)',
@@ -466,7 +474,9 @@ const styles = StyleSheet.create({
     fontWeight: '700',
   },
   content: {
-    gap: 16,
+    flex: 1,
+    gap: 20,
+    justifyContent: 'center',
     maxWidth: 360,
     width: '100%',
   },

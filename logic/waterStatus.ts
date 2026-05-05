@@ -8,15 +8,22 @@ export function getWaterStatus(waterAmount: number, dailyGoal: number) {
     };
   }
 
-  if (progress < 1) {
+  if (progress < 0.8) {
     return {
       statusText: 'medium',
       statusColor: '#D4A017',
     };
   }
 
+  if (progress < 0.95) {
+    return {
+      statusText: 'good',
+      statusColor: '#2F8A5B',
+    };
+  }
+
   return {
     statusText: 'perfect',
-    statusColor: '#2F8A5B',
+    statusColor: '#00AEEF',
   };
 }
