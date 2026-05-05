@@ -4,7 +4,7 @@ export function getWaterStatus(waterAmount: number, dailyGoal: number) {
   if (progress < 0.5) {
     return {
       statusText: 'low',
-      statusColor: '#D32F2F',
+      statusColor: '#D95A5A',
     };
   }
 
@@ -17,6 +17,6 @@ export function getWaterStatus(waterAmount: number, dailyGoal: number) {
 
   return {
     statusText: 'perfect',
-    statusColor: '#2E7D32',
+    statusColor: '#2F8A5B',
   };
 }

@@ -14,7 +14,28 @@ Notifications.setNotificationHandler({
 
 export default function Layout() {
   return (
-    <Tabs screenOptions={{ headerShown: false, tabBarShowLabel: false }}>
+    <Tabs
+      screenOptions={{
+        headerShown: false,
+        tabBarActiveTintColor: '#00AEEF',
+        tabBarInactiveTintColor: '#7D9AAA',
+        tabBarShowLabel: false,
+        tabBarStyle: {
+          backgroundColor: 'rgba(255, 255, 255, 0.96)',
+          borderTopWidth: 0,
+          elevation: 10,
+          height: 64,
+          paddingTop: 8,
+          shadowColor: '#6CAFD0',
+          shadowOffset: {
+            width: 0,
+            height: -6,
+          },
+          shadowOpacity: 0.12,
+          shadowRadius: 14,
+        },
+      }}
+    >
       <Tabs.Screen
         name="index"
         options={{
@@ -49,6 +70,13 @@ export default function Layout() {
           tabBarIcon: ({ color, size }) => (
             <Ionicons name="settings" color={color} size={size} />
           ),
+        }}
+      />
+      <Tabs.Screen
+        name="support"
+        options={{
+          href: null,
+          title: 'Support',
         }}
       />
     </Tabs>

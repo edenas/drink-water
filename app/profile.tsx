@@ -1,6 +1,6 @@
 import AsyncStorage from '@react-native-async-storage/async-storage';
 import { useFocusEffect } from 'expo-router';
-import { useCallback, useState } from 'react';
+import { useCallback, useRef, useState } from 'react';
 import {
   Keyboard,
   ScrollView,
@@ -13,6 +13,10 @@ import {
 } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 
+import ScreenBackground from '@/components/ScreenBackground';
+import WaterBackgroundAnimation, {
+  WaterBackgroundAnimationRef,
+} from '@/components/WaterBackgroundAnimation';
 import WaterButton from '@/components/WaterButton';
 
 const weightStorageKey = 'weight';
@@ -25,6 +29,7 @@ export default function ProfileScreen() {
   const [activityLevel, setActivityLevel] = useState<string | null>(null);
   const [saveMessage, setSaveMessage] = useState('');
   const [hasSavedSettings, setHasSavedSettings] = useState(false);
+  const waterAnimationRef = useRef<WaterBackgroundAnimationRef>(null);
 
   useFocusEffect(
     useCallback(() => {
@@ -50,6 +55,7 @@ export default function ProfileScreen() {
   );
 
   const handleSave = async () => {
+    waterAnimationRef.current?.trigger();
     Keyboard.dismiss();
     const message = hasSavedSettings ? '\u2713 Updated' : '\u2713 Saved';
 
@@ -73,85 +79,126 @@ export default function ProfileScreen() {
 
   return (
     <TouchableWithoutFeedback onPress={Keyboard.dismiss} accessible={false}>
-      <SafeAreaView style={styles.container}>
-        <ScrollView
-          contentContainerStyle={styles.content}
-          keyboardShouldPersistTaps="handled"
-        >
-          <Text style={styles.title}>Profile</Text>
+      <ScreenBackground>
+        <WaterBackgroundAnimation ref={waterAnimationRef} />
+        <SafeAreaView style={styles.container}>
+          <ScrollView
+            contentContainerStyle={styles.content}
+            keyboardShouldPersistTaps="handled"
+          >
+            <Text style={styles.title}>Profile</Text>
 
-          <Text style={styles.label}>Weight</Text>
-          <TextInput
-            style={styles.input}
-            keyboardType="numeric"
-            value={weight}
-            onChangeText={setWeight}
-            placeholder="Enter weight"
-          />
+            <View style={styles.card}>
+              <Text style={styles.label}>Weight</Text>
+              <TextInput
+                style={styles.input}
+                keyboardType="numeric"
+                value={weight}
+                onChangeText={setWeight}
+                placeholder="Enter weight"
+                placeholderTextColor="#8AA7B6"
+              />
 
-          <Text style={styles.label}>Gender</Text>
-          <View style={styles.options}>
-            <TouchableOpacity
-              style={[
-                styles.option,
-                gender === 'male' && styles.selectedOption,
-              ]}
-              onPress={() => handleGenderPress('male')}
-            >
-              <Text style={styles.optionText}>Male</Text>
-            </TouchableOpacity>
-            <TouchableOpacity
-              style={[
-                styles.option,
-                gender === 'female' && styles.selectedOption,
-              ]}
-              onPress={() => handleGenderPress('female')}
-            >
-              <Text style={styles.optionText}>Female</Text>
-            </TouchableOpacity>
-          </View>
+              <Text style={styles.label}>Gender</Text>
+              <View style={styles.options}>
+                <TouchableOpacity
+                  style={[
+                    styles.option,
+                    gender === 'male' && styles.selectedOption,
+                  ]}
+                  onPress={() => handleGenderPress('male')}
+                >
+                  <Text
+                    style={[
+                      styles.optionText,
+                      gender === 'male' && styles.selectedOptionText,
+                    ]}
+                  >
+                    Male
+                  </Text>
+                </TouchableOpacity>
+                <TouchableOpacity
+                  style={[
+                    styles.option,
+                    gender === 'female' && styles.selectedOption,
+                  ]}
+                  onPress={() => handleGenderPress('female')}
+                >
+                  <Text
+                    style={[
+                      styles.optionText,
+                      gender === 'female' && styles.selectedOptionText,
+                    ]}
+                  >
+                    Female
+                  </Text>
+                </TouchableOpacity>
+              </View>
 
-          <Text style={styles.label}>Activity level</Text>
-          <View style={styles.options}>
-            <TouchableOpacity
-              style={[
-                styles.option,
-                activityLevel === 'low' && styles.selectedOption,
-              ]}
-              onPress={() => handleActivityLevelPress('low')}
-            >
-              <Text style={styles.optionText}>Low</Text>
-            </TouchableOpacity>
-            <TouchableOpacity
-              style={[
-                styles.option,
-                activityLevel === 'medium' && styles.selectedOption,
-              ]}
-              onPress={() => handleActivityLevelPress('medium')}
-            >
-              <Text style={styles.optionText}>Medium</Text>
-            </TouchableOpacity>
-            <TouchableOpacity
-              style={[
-                styles.option,
-                activityLevel === 'high' && styles.selectedOption,
-              ]}
-              onPress={() => handleActivityLevelPress('high')}
-            >
-              <Text style={styles.optionText}>High</Text>
-            </TouchableOpacity>
-          </View>
+              <Text style={styles.label}>Activity level</Text>
+              <View style={styles.options}>
+                <TouchableOpacity
+                  style={[
+                    styles.option,
+                    activityLevel === 'low' && styles.selectedOption,
+                  ]}
+                  onPress={() => handleActivityLevelPress('low')}
+                >
+                  <Text
+                    style={[
+                      styles.optionText,
+                      activityLevel === 'low' && styles.selectedOptionText,
+                    ]}
+                  >
+                    Low
+                  </Text>
+                </TouchableOpacity>
+                <TouchableOpacity
+                  style={[
+                    styles.option,
+                    activityLevel === 'medium' && styles.selectedOption,
+                  ]}
+                  onPress={() => handleActivityLevelPress('medium')}
+                >
+                  <Text
+                    style={[
+                      styles.optionText,
+                      activityLevel === 'medium' && styles.selectedOptionText,
+                    ]}
+                  >
+                    Medium
+                  </Text>
+                </TouchableOpacity>
+                <TouchableOpacity
+                  style={[
+                    styles.option,
+                    activityLevel === 'high' && styles.selectedOption,
+                  ]}
+                  onPress={() => handleActivityLevelPress('high')}
+                >
+                  <Text
+                    style={[
+                      styles.optionText,
+                      activityLevel === 'high' && styles.selectedOptionText,
+                    ]}
+                  >
+                    High
+                  </Text>
+                </TouchableOpacity>
+              </View>
 
-          <Text style={styles.settingsActionLabel}>
-            {hasSavedSettings ? 'Update settings' : 'Save settings'}
-          </Text>
-          <WaterButton
-            label={hasSavedSettings ? 'Update' : 'Save'}
-            onPress={handleSave}
-          />
-          <Text style={styles.saveMessage}>{saveMessage}</Text>
-        </ScrollView>
-      </SafeAreaView>
+              <Text style={styles.settingsActionLabel}>
+                {hasSavedSettings ? 'Update settings' : 'Save settings'}
+              </Text>
+              <WaterButton
+                label={hasSavedSettings ? 'Update' : 'Save'}
+                onPress={handleSave}
+              />
+              <Text style={styles.saveMessage}>{saveMessage}</Text>
+            </View>
+          </ScrollView>
+        </SafeAreaView>
+      </ScreenBackground>
     </TouchableWithoutFeedback>
   );
 }
@@ -159,56 +206,92 @@ export default function ProfileScreen() {
 const styles = StyleSheet.create({
   container: {
     flex: 1,
-    backgroundColor: '#E6F7FF',
   },
   content: {
-    padding: 24,
+    padding: 20,
     paddingBottom: 80,
   },
   title: {
-    fontSize: 36,
-    fontWeight: 'bold',
-    marginBottom: 30,
+    color: '#173B4A',
+    fontSize: 32,
+    fontWeight: '700',
+    marginBottom: 20,
+  },
+  card: {
+    backgroundColor: 'rgba(255, 255, 255, 0.92)',
+    borderRadius: 24,
+    elevation: 4,
+    paddingHorizontal: 20,
+    paddingVertical: 28,
+    shadowColor: '#6CAFD0',
+    shadowOffset: {
+      width: 0,
+      height: 10,
+    },
+    shadowOpacity: 0.14,
+    shadowRadius: 18,
   },
   label: {
-    fontSize: 18,
-    fontWeight: 'bold',
+    color: '#6B7C85',
+    fontSize: 14,
+    fontWeight: '600',
     marginBottom: 10,
   },
   input: {
-    backgroundColor: '#ffffff',
-    borderRadius: 10,
-    fontSize: 18,
-    marginBottom: 20,
-    paddingHorizontal: 12,
-    paddingVertical: 10,
+    backgroundColor: '#F4FBFF',
+    borderColor: '#D4EEF8',
+    borderRadius: 18,
+    borderWidth: 1,
+    color: '#173B4A',
+    fontSize: 17,
+    fontWeight: '500',
+    marginBottom: 26,
+    paddingHorizontal: 16,
+    paddingVertical: 14,
   },
   options: {
     flexDirection: 'row',
     gap: 10,
-    marginBottom: 20,
+    marginBottom: 26,
   },
   option: {
-    backgroundColor: '#ffffff',
-    borderRadius: 10,
-    paddingHorizontal: 16,
-    paddingVertical: 10,
+    backgroundColor: '#F4FBFF',
+    borderColor: '#D4EEF8',
+    borderRadius: 18,
+    borderWidth: 1,
+    elevation: 1,
+    paddingHorizontal: 18,
+    paddingVertical: 12,
+    shadowColor: '#6CAFD0',
+    shadowOffset: {
+      width: 0,
+      height: 4,
+    },
+    shadowOpacity: 0.08,
+    shadowRadius: 8,
   },
   selectedOption: {
     backgroundColor: '#00AEEF',
+    borderColor: '#00AEEF',
   },
   optionText: {
+    color: '#24566A',
     fontSize: 16,
-    fontWeight: 'bold',
+    fontWeight: '600',
+  },
+  selectedOptionText: {
+    color: '#ffffff',
   },
   settingsActionLabel: {
-    fontSize: 16,
-    fontWeight: 'bold',
-    marginTop: 4,
+    color: '#6B7C85',
+    fontSize: 14,
+    fontWeight: '600',
+    marginTop: 2,
   },
   saveMessage: {
-    fontSize: 18,
-    fontWeight: 'bold',
-    marginTop: 12,
+    color: '#007FB1',
+    fontSize: 17,
+    fontWeight: '700',
+    marginTop: 14,
   },
 });

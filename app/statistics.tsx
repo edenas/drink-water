@@ -11,6 +11,8 @@ import {
 import { BarChart } from 'react-native-chart-kit';
 import { SafeAreaView } from 'react-native-safe-area-context';
 
+import ScreenBackground from '@/components/ScreenBackground';
+
 const waterHistoryStorageKey = 'waterHistory';
 const hourlyWaterHistoryStorageKey = 'hourlyWaterHistory';
 const allTimeWaterAmountStorageKey = 'allTimeWaterAmount';
@@ -22,33 +24,18 @@ const getCurrentWeekDateKeys = () => {
   const today = new Date();
   const dayOfWeek = today.getDay();
   const daysSinceMonday = dayOfWeek === 0 ? 6 : dayOfWeek - 1;
+  const monday = new Date(today);
 
-  for (let index = daysSinceMonday; index >= 0; index -= 1) {
-    const date = new Date(today);
-    date.setDate(date.getDate() - index);
+  monday.setDate(today.getDate() - daysSinceMonday);
+
+  for (let index = 0; index < 7; index += 1) {
+    const date = new Date(monday);
+    date.setDate(monday.getDate() + index);
     dates.push(getDateKey(date));
   }
 
   return dates;
 };
-
-const getLastSevenDateKeys = () => {
-  const dates = [];
-  const today = new Date();
-
-  for (let index = 6; index >= 0; index -= 1) {
-    const date = new Date(today);
-    date.setDate(date.getDate() - index);
-    dates.push(getDateKey(date));
-  }
-
-  return dates;
-};
-
-const getChartLabel = (dateKey: string) =>
-  new Date(`${dateKey}T00:00:00`).toLocaleDateString('en-US', {
-    weekday: 'short',
-  });
 
 const getHourLabels = () =>
   Array.from({ length: 24 }, (_, hour) =>
@@ -69,6 +56,8 @@ const getMonthLabels = () => [
   'Nov',
   'Dec',
 ];
+
+const getWeekLabels = () => ['Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat', 'Sun'];
 
 const getCurrentYearMonthKeys = (year: string) =>
   Array.from(
@@ -115,8 +104,20 @@ const getLatestYearChartData = (waterHistory: Record<string, number>) => {
 };
 
 const ChartSwipeHint = () => (
-  <Text style={styles.chartSwipeHint}>Swipe sideways →</Text>
+  <Text style={styles.chartSwipeHint}>← Swipe sideways →</Text>
 );
+
+const chartConfig = {
+  backgroundGradientFrom: '#ffffff',
+  backgroundGradientTo: '#ffffff',
+  barPercentage: 0.52,
+  color: (opacity = 1) => `rgba(0, 174, 239, ${opacity})`,
+  decimalPlaces: 1,
+  labelColor: (opacity = 1) => `rgba(30, 45, 54, ${opacity})`,
+  propsForBackgroundLines: {
+    stroke: '#D7EEF7',
+  },
+};
 
 const sumDates = (waterHistory: Record<string, number>, dates: string[]) =>
   dates.reduce((total, date) => total + (waterHistory[date] || 0), 0);
@@ -141,7 +142,7 @@ export default function StatisticsScreen() {
     allTime: 0,
   });
   const [weeklyChart, setWeeklyChart] = useState({
-    labels: getLastSevenDateKeys().map(getChartLabel),
+    labels: getWeekLabels(),
     values: Array(7).fill(0),
   });
   const [todayChart, setTodayChart] = useState({
@@ -180,7 +181,6 @@ export default function StatisticsScreen() {
     const today = getDateKey(new Date());
     const todayHourlyHistory = hourlyWaterHistory[today] || {};
     const weekDates = getCurrentWeekDateKeys();
-    const chartDates = getLastSevenDateKeys();
     const monthDates = getCurrentMonthDateKeys();
     const currentMonth = today.slice(0, 7);
     const currentYear = today.slice(0, 4);
@@ -203,8 +203,8 @@ export default function StatisticsScreen() {
           : 0),
     });
     setWeeklyChart({
-      labels: chartDates.map(getChartLabel),
-      values: chartDates.map((date) =>
+      labels: getWeekLabels(),
+      values: weekDates.map((date) =>
         Number(((waterHistory[date] || 0) / 1000).toFixed(2))
       ),
     });
@@ -241,13 +241,16 @@ export default function StatisticsScreen() {
 
   const formatLiters = (amount: number) => `${(amount / 1000).toFixed(2)} L`;
   const chartVisibleWidth = width - 48;
-  const chartWidth = Math.max(chartVisibleWidth, 420);
-  const hourlyChartWidth = Math.max(chartVisibleWidth, 1800);
-  const monthlyChartWidth = Math.max(chartVisibleWidth, 960);
-  const yearlyChartWidth = Math.max(chartVisibleWidth, 520);
+  const chartWidth = Math.max(chartVisibleWidth, 7 * 58);
+  const hourlyChartWidth = Math.max(chartVisibleWidth, 24 * 64);
+  const monthlyChartWidth = Math.max(
+    chartVisibleWidth,
+    monthlyChart.labels.length * 44
+  );
+  const yearlyChartWidth = Math.max(chartVisibleWidth, 12 * 52);
   const allTimeChartWidth =
     allTimeChart.labels.length > 5
-      ? Math.max(chartVisibleWidth, allTimeChart.labels.length * 72)
+      ? Math.max(chartVisibleWidth, allTimeChart.labels.length * 64)
       : chartVisibleWidth;
   const isWeeklyChartScrollable = chartWidth > chartVisibleWidth;
   const isHourlyChartScrollable = hourlyChartWidth > chartVisibleWidth;
@@ -257,8 +260,9 @@ export default function StatisticsScreen() {
     allTimeChart.labels.length > 5 && allTimeChartWidth > chartVisibleWidth;
 
   return (
-    <SafeAreaView style={styles.container}>
-      <ScrollView contentContainerStyle={styles.content}>
+    <ScreenBackground>
+      <SafeAreaView style={styles.container}>
+        <ScrollView contentContainerStyle={styles.content}>
         <Text style={styles.title}>Statistics</Text>
 
         <View style={styles.statRow}>
@@ -281,16 +285,7 @@ export default function StatisticsScreen() {
               height={190}
               yAxisLabel=""
               yAxisSuffix=" L"
-              chartConfig={{
-                backgroundGradientFrom: '#ffffff',
-                backgroundGradientTo: '#ffffff',
-                color: (opacity = 1) => `rgba(0, 174, 239, ${opacity})`,
-                decimalPlaces: 1,
-                labelColor: (opacity = 1) => `rgba(30, 45, 54, ${opacity})`,
-                propsForBackgroundLines: {
-                  stroke: '#D7EEF7',
-                },
-              }}
+              chartConfig={chartConfig}
               fromZero
               showValuesOnTopOfBars
               style={styles.chart}
@@ -319,16 +314,7 @@ export default function StatisticsScreen() {
               height={190}
               yAxisLabel=""
               yAxisSuffix=" L"
-              chartConfig={{
-                backgroundGradientFrom: '#ffffff',
-                backgroundGradientTo: '#ffffff',
-                color: (opacity = 1) => `rgba(0, 174, 239, ${opacity})`,
-                decimalPlaces: 1,
-                labelColor: (opacity = 1) => `rgba(30, 45, 54, ${opacity})`,
-                propsForBackgroundLines: {
-                  stroke: '#D7EEF7',
-                },
-              }}
+              chartConfig={chartConfig}
               fromZero
               showValuesOnTopOfBars
               style={styles.chart}
@@ -357,16 +343,7 @@ export default function StatisticsScreen() {
               height={190}
               yAxisLabel=""
               yAxisSuffix=" L"
-              chartConfig={{
-                backgroundGradientFrom: '#ffffff',
-                backgroundGradientTo: '#ffffff',
-                color: (opacity = 1) => `rgba(0, 174, 239, ${opacity})`,
-                decimalPlaces: 1,
-                labelColor: (opacity = 1) => `rgba(30, 45, 54, ${opacity})`,
-                propsForBackgroundLines: {
-                  stroke: '#D7EEF7',
-                },
-              }}
+              chartConfig={chartConfig}
               fromZero
               showValuesOnTopOfBars
               style={styles.chart}
@@ -395,16 +372,7 @@ export default function StatisticsScreen() {
               height={190}
               yAxisLabel=""
               yAxisSuffix=" L"
-              chartConfig={{
-                backgroundGradientFrom: '#ffffff',
-                backgroundGradientTo: '#ffffff',
-                color: (opacity = 1) => `rgba(0, 174, 239, ${opacity})`,
-                decimalPlaces: 1,
-                labelColor: (opacity = 1) => `rgba(30, 45, 54, ${opacity})`,
-                propsForBackgroundLines: {
-                  stroke: '#D7EEF7',
-                },
-              }}
+              chartConfig={chartConfig}
               fromZero
               showValuesOnTopOfBars
               style={styles.chart}
@@ -435,17 +403,7 @@ export default function StatisticsScreen() {
                   height={190}
                   yAxisLabel=""
                   yAxisSuffix=" L"
-                  chartConfig={{
-                    backgroundGradientFrom: '#ffffff',
-                    backgroundGradientTo: '#ffffff',
-                    color: (opacity = 1) => `rgba(0, 174, 239, ${opacity})`,
-                    decimalPlaces: 1,
-                    labelColor: (opacity = 1) =>
-                      `rgba(30, 45, 54, ${opacity})`,
-                    propsForBackgroundLines: {
-                      stroke: '#D7EEF7',
-                    },
-                  }}
+                  chartConfig={chartConfig}
                   fromZero
                   showValuesOnTopOfBars
                   style={styles.chart}
@@ -461,16 +419,7 @@ export default function StatisticsScreen() {
                 height={190}
                 yAxisLabel=""
                 yAxisSuffix=" L"
-                chartConfig={{
-                  backgroundGradientFrom: '#ffffff',
-                  backgroundGradientTo: '#ffffff',
-                  color: (opacity = 1) => `rgba(0, 174, 239, ${opacity})`,
-                  decimalPlaces: 1,
-                  labelColor: (opacity = 1) => `rgba(30, 45, 54, ${opacity})`,
-                  propsForBackgroundLines: {
-                    stroke: '#D7EEF7',
-                  },
-                }}
+                chartConfig={chartConfig}
                 fromZero
                 showValuesOnTopOfBars
                 style={styles.chart}
@@ -478,62 +427,84 @@ export default function StatisticsScreen() {
             )}
           </View>
         )}
-      </ScrollView>
-    </SafeAreaView>
+        </ScrollView>
+      </SafeAreaView>
+    </ScreenBackground>
   );
 }
 
 const styles = StyleSheet.create({
   container: {
     flex: 1,
-    backgroundColor: '#E6F7FF',
   },
   content: {
-    padding: 24,
+    padding: 20,
     paddingBottom: 80,
   },
   title: {
-    fontSize: 36,
+    color: '#173B4A',
+    fontSize: 34,
     fontWeight: 'bold',
     marginBottom: 20,
   },
   chart: {
-    borderRadius: 10,
+    borderRadius: 18,
+    marginVertical: 6,
   },
   chartCard: {
-    backgroundColor: '#ffffff',
-    borderRadius: 10,
-    marginBottom: 24,
+    backgroundColor: 'rgba(255, 255, 255, 0.94)',
+    borderRadius: 22,
+    elevation: 4,
+    marginBottom: 28,
     overflow: 'hidden',
+    paddingHorizontal: 8,
+    paddingVertical: 18,
+    shadowColor: '#6CAFD0',
+    shadowOffset: {
+      width: 0,
+      height: 10,
+    },
+    shadowOpacity: 0.14,
+    shadowRadius: 18,
   },
   chartScrollContent: {
-    paddingRight: 40,
+    paddingLeft: 8,
+    paddingRight: 48,
   },
   chartSwipeHint: {
-    color: '#6F8A99',
+    color: '#5E7886',
     fontSize: 12,
     fontWeight: '600',
-    marginBottom: 10,
-    marginTop: 2,
+    marginBottom: 4,
+    marginTop: 10,
     textAlign: 'center',
   },
   statRow: {
     flexDirection: 'row',
     justifyContent: 'space-between',
     alignItems: 'center',
-    backgroundColor: '#ffffff',
-    borderRadius: 10,
-    marginBottom: 12,
-    paddingHorizontal: 16,
-    paddingVertical: 14,
+    backgroundColor: 'rgba(255, 255, 255, 0.92)',
+    borderRadius: 20,
+    elevation: 3,
+    marginBottom: 16,
+    paddingHorizontal: 20,
+    paddingVertical: 18,
+    shadowColor: '#6CAFD0',
+    shadowOffset: {
+      width: 0,
+      height: 6,
+    },
+    shadowOpacity: 0.12,
+    shadowRadius: 12,
   },
   statLabel: {
+    color: '#24566A',
     fontSize: 18,
     fontWeight: 'bold',
   },
   statValue: {
-    fontSize: 18,
+    fontSize: 20,
     fontWeight: 'bold',
-    color: '#00AEEF',
+    color: '#007FB1',
   },
 });
