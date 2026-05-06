@@ -1,5 +1,6 @@
+import AsyncStorage from '@react-native-async-storage/async-storage';
 import { Ionicons } from '@expo/vector-icons';
-import { Tabs } from 'expo-router';
+import { router, Tabs, useSegments } from 'expo-router';
 import { useEffect, useState } from 'react';
 import {
   ActivityIndicator,
@@ -18,6 +19,10 @@ import {
 
 import ScreenBackground from '@/components/ScreenBackground';
 import { getNotificationsModule } from '@/logic/notifications';
+import {
+  hasAcceptedTermsStorageKey,
+  TermsAcceptanceContext,
+} from '@/logic/termsAcceptance';
 
 const Notifications = getNotificationsModule();
 
@@ -34,6 +39,7 @@ if (Notifications !== null) {
 }
 
 function TabsLayout() {
+  const segments = useSegments();
   const insets = useSafeAreaInsets();
   const bottomInset = insets.bottom;
   const bottomPadding = bottomInset > 0 ? bottomInset : 8;
@@ -45,8 +51,23 @@ function TabsLayout() {
       ? { transform: [{ translateY: tabIconTranslateY }] }
       : {};
   const [startupPhase, setStartupPhase] = useState<'splash' | 'app'>('splash');
+  const [hasAcceptedTerms, setHasAcceptedTerms] = useState(false);
+  const [hasCheckedTerms, setHasCheckedTerms] = useState(false);
   const splashOpacity = useState(() => new Animated.Value(1))[0];
   const appOpacity = useState(() => new Animated.Value(0))[0];
+
+  useEffect(() => {
+    const checkTermsAcceptance = async () => {
+      const savedHasAcceptedTerms = await AsyncStorage.getItem(
+        hasAcceptedTermsStorageKey
+      );
+
+      setHasAcceptedTerms(savedHasAcceptedTerms === 'true');
+      setHasCheckedTerms(true);
+    };
+
+    checkTermsAcceptance();
+  }, []);
 
   useEffect(() => {
     const startupTimer = setTimeout(() => {
@@ -67,7 +88,32 @@ function TabsLayout() {
     return () => clearTimeout(startupTimer);
   }, [appOpacity, splashOpacity]);
 
-  if (startupPhase === 'splash') {
+  useEffect(() => {
+    if (startupPhase !== 'app' || !hasCheckedTerms) {
+      return;
+    }
+
+    const currentRoute = segments[0];
+    const firstLaunchAllowedRoutes = [
+      'terms',
+      'disclaimer',
+      'privacy-policy',
+    ];
+
+    if (
+      !hasAcceptedTerms &&
+      !firstLaunchAllowedRoutes.includes(currentRoute ?? '')
+    ) {
+      router.replace('/terms');
+      return;
+    }
+
+    if (hasAcceptedTerms && currentRoute === 'terms') {
+      router.replace('/');
+    }
+  }, [hasAcceptedTerms, hasCheckedTerms, segments, startupPhase]);
+
+  if (startupPhase === 'splash' || !hasCheckedTerms) {
     return (
       <Animated.View style={[styles.screen, { opacity: splashOpacity }]}>
         <ScreenBackground style={styles.splashContainer}>
@@ -85,7 +131,10 @@ function TabsLayout() {
   }
 
   return (
-    <Animated.View style={[styles.screen, { opacity: appOpacity }]}>
+    <TermsAcceptanceContext.Provider
+      value={{ hasAcceptedTerms, setHasAcceptedTerms }}
+    >
+      <Animated.View style={[styles.screen, { opacity: appOpacity }]}>
       <Tabs
         screenOptions={{
           animation: 'shift',
@@ -168,6 +217,14 @@ function TabsLayout() {
           }}
         />
         <Tabs.Screen
+          name="terms"
+          options={{
+            href: null,
+            title: 'Terms',
+            tabBarStyle: styles.hiddenTabBar,
+          }}
+        />
+        <Tabs.Screen
           name="support"
           options={{
             href: null,
@@ -178,6 +235,7 @@ function TabsLayout() {
           name="disclaimer"
           options={{
             href: null,
+            tabBarStyle: styles.hiddenTabBar,
             title: 'Disclaimer',
           }}
         />
@@ -185,6 +243,7 @@ function TabsLayout() {
           name="how-to-use"
           options={{
             href: null,
+            tabBarStyle: styles.hiddenTabBar,
             title: 'How to use',
           }}
         />
@@ -192,11 +251,13 @@ function TabsLayout() {
           name="privacy-policy"
           options={{
             href: null,
+            tabBarStyle: styles.hiddenTabBar,
             title: 'Privacy Policy',
           }}
         />
       </Tabs>
-    </Animated.View>
+      </Animated.View>
+    </TermsAcceptanceContext.Provider>
   );
 }
 
@@ -211,6 +272,9 @@ export default function Layout() {
 const styles = StyleSheet.create({
   screen: {
     flex: 1,
+  },
+  hiddenTabBar: {
+    display: 'none',
   },
   splashContainer: {
     alignItems: 'center',

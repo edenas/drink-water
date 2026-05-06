@@ -1,4 +1,4 @@
-import { router, useFocusEffect } from 'expo-router';
+import { router, useFocusEffect, useLocalSearchParams } from 'expo-router';
 import { useCallback, useRef } from 'react';
 import {
   Animated,
@@ -30,10 +30,16 @@ function InfoButton({ label, onPress }: { label: string; onPress: () => void }) 
 }
 
 export default function DisclaimerScreen() {
+  const { source } = useLocalSearchParams<{ source?: string }>();
   const entranceAnimation = useRef(new Animated.Value(0)).current;
 
   const handleBackPress = () => {
-    router.replace('/settings');
+    if (source === 'settings') {
+      router.replace('/settings');
+      return;
+    }
+
+    router.replace('/terms?showAgreement=true');
   };
 
   useFocusEffect(
