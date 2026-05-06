@@ -1,8 +1,11 @@
 import AsyncStorage from '@react-native-async-storage/async-storage';
 import { useFocusEffect } from 'expo-router';
-import { useCallback, useEffect, useRef, useState } from 'react';
+import { useCallback, useRef, useState } from 'react';
 import {
+  ActivityIndicator,
   Animated,
+  InteractionManager,
+  LayoutChangeEvent,
   ScrollView,
   StyleSheet,
   Text,
@@ -146,6 +149,10 @@ const sumMatchingDates = (
 export default function StatisticsScreen() {
   const { width } = useWindowDimensions();
   const chartCardsAnimation = useRef(new Animated.Value(0)).current;
+  const [containerWidth, setContainerWidth] = useState(0);
+  const [chartRenderKey, setChartRenderKey] = useState(0);
+  const [hasLoadedWaterData, setHasLoadedWaterData] = useState(false);
+  const [isScreenReady, setIsScreenReady] = useState(false);
   const [stats, setStats] = useState({
     today: 0,
     week: 0,
@@ -235,26 +242,55 @@ export default function StatisticsScreen() {
     });
     setMonthlyChart(getCurrentMonthChartData(waterHistory));
     setAllTimeChart(getLatestYearChartData(waterHistory));
+    setHasLoadedWaterData(true);
   }, []);
 
-  useEffect(() => {
-    loadWaterData();
-  }, [loadWaterData]);
+  const handleContainerLayout = useCallback((event: LayoutChangeEvent) => {
+    const nextWidth = event.nativeEvent.layout.width;
+
+    if (nextWidth > 0) {
+      setContainerWidth(nextWidth);
+    }
+  }, []);
 
   useFocusEffect(
     useCallback(() => {
+      let isActive = true;
+      let animationFrame: ReturnType<typeof requestAnimationFrame> | undefined;
       loadWaterData();
+      setIsScreenReady(false);
       chartCardsAnimation.setValue(0);
       Animated.timing(chartCardsAnimation, {
         toValue: 1,
         duration: 420,
         useNativeDriver: true,
       }).start();
+
+      const interactionTask = InteractionManager.runAfterInteractions(() => {
+        animationFrame = requestAnimationFrame(() => {
+          if (isActive) {
+            setChartRenderKey((currentKey) => currentKey + 1);
+            setIsScreenReady(true);
+          }
+        });
+      });
+
+      return () => {
+        isActive = false;
+        interactionTask.cancel();
+
+        if (animationFrame !== undefined) {
+          cancelAnimationFrame(animationFrame);
+        }
+      };
     }, [chartCardsAnimation, loadWaterData])
   );
 
   const formatLiters = (amount: number) => `${(amount / 1000).toFixed(2)} L`;
-  const chartVisibleWidth = width - 48;
+  const layoutWidth = containerWidth || width;
+  const chartVisibleWidth = Math.max(layoutWidth - 48, 1);
+  const canRenderCharts =
+    hasLoadedWaterData && isScreenReady && chartVisibleWidth > 1;
   const chartWidth = Math.max(chartVisibleWidth, 7 * 58);
   const hourlyChartWidth = Math.max(chartVisibleWidth, 24 * 64);
   const monthlyChartWidth = Math.max(
@@ -292,145 +328,34 @@ export default function StatisticsScreen() {
 
   return (
     <ScreenBackground>
-      <SafeAreaView style={styles.container}>
-        <ScrollView contentContainerStyle={styles.content}>
-        <Text style={styles.title}>Statistics</Text>
+      <SafeAreaView style={styles.container} onLayout={handleContainerLayout}>
+        {!canRenderCharts ? (
+          <Animated.View style={[styles.loadingContent, animatedCardStyle]}>
+            <ActivityIndicator color="#00AEEF" size="small" />
+            <Text style={styles.loadingText}>Loading statistics...</Text>
+          </Animated.View>
+        ) : (
+          <ScrollView contentContainerStyle={styles.content}>
+            <Text style={styles.title}>Statistics</Text>
 
-        <Animated.View style={[styles.statRow, animatedCardStyle]}>
-          <Text style={styles.statLabel}>Today</Text>
-          <Text style={styles.statValue}>{formatLiters(stats.today)}</Text>
-        </Animated.View>
+            <Animated.View style={[styles.statRow, animatedCardStyle]}>
+              <Text style={styles.statLabel}>Today</Text>
+              <Text style={styles.statValue}>{formatLiters(stats.today)}</Text>
+            </Animated.View>
 
-        <Animated.View style={[styles.chartCard, animatedCardStyle]}>
-          <ScrollView
-            horizontal
-            contentContainerStyle={styles.chartScrollContent}
-            showsHorizontalScrollIndicator
-          >
-            <BarChart
-              data={{
-                labels: todayChart.labels,
-                datasets: [{ data: todayChart.values }],
-              }}
-              width={hourlyChartWidth}
-              height={190}
-              yAxisLabel=""
-              yAxisSuffix=" L"
-              chartConfig={chartConfig}
-              fromZero
-              showValuesOnTopOfBars
-              style={styles.chart}
-            />
-          </ScrollView>
-          {isHourlyChartScrollable && <ChartSwipeHint />}
-        </Animated.View>
-
-        <Animated.View style={[styles.statRow, animatedCardStyle]}>
-          <Text style={styles.statLabel}>This week</Text>
-          <Text style={styles.statValue}>{formatLiters(stats.week)}</Text>
-        </Animated.View>
-
-        <Animated.View style={[styles.chartCard, animatedCardStyle]}>
-          <ScrollView
-            horizontal
-            contentContainerStyle={styles.chartScrollContent}
-            showsHorizontalScrollIndicator
-          >
-            <BarChart
-              data={{
-                labels: weeklyChart.labels,
-                datasets: [{ data: weeklyChart.values }],
-              }}
-              width={chartWidth}
-              height={190}
-              yAxisLabel=""
-              yAxisSuffix=" L"
-              chartConfig={chartConfig}
-              fromZero
-              showValuesOnTopOfBars
-              style={styles.chart}
-            />
-          </ScrollView>
-          {isWeeklyChartScrollable && <ChartSwipeHint />}
-        </Animated.View>
-
-        <Animated.View style={[styles.statRow, animatedCardStyle]}>
-          <Text style={styles.statLabel}>This month</Text>
-          <Text style={styles.statValue}>{formatLiters(stats.month)}</Text>
-        </Animated.View>
-
-        <Animated.View style={[styles.chartCard, animatedCardStyle]}>
-          <ScrollView
-            horizontal
-            contentContainerStyle={styles.chartScrollContent}
-            showsHorizontalScrollIndicator
-          >
-            <BarChart
-              data={{
-                labels: monthlyChart.labels,
-                datasets: [{ data: monthlyChart.values }],
-              }}
-              width={monthlyChartWidth}
-              height={190}
-              yAxisLabel=""
-              yAxisSuffix=" L"
-              chartConfig={chartConfig}
-              fromZero
-              showValuesOnTopOfBars
-              style={styles.chart}
-            />
-          </ScrollView>
-          {isMonthlyChartScrollable && <ChartSwipeHint />}
-        </Animated.View>
-
-        <Animated.View style={[styles.statRow, animatedCardStyle]}>
-          <Text style={styles.statLabel}>This year</Text>
-          <Text style={styles.statValue}>{formatLiters(stats.year)}</Text>
-        </Animated.View>
-
-        <Animated.View style={[styles.chartCard, animatedCardStyle]}>
-          <ScrollView
-            horizontal
-            contentContainerStyle={styles.chartScrollContent}
-            showsHorizontalScrollIndicator
-          >
-            <BarChart
-              data={{
-                labels: yearlyChart.labels,
-                datasets: [{ data: yearlyChart.values }],
-              }}
-              width={yearlyChartWidth}
-              height={190}
-              yAxisLabel=""
-              yAxisSuffix=" L"
-              chartConfig={chartConfig}
-              fromZero
-              showValuesOnTopOfBars
-              style={styles.chart}
-            />
-          </ScrollView>
-          {isYearlyChartScrollable && <ChartSwipeHint />}
-        </Animated.View>
-
-        <Animated.View style={[styles.statRow, animatedCardStyle]}>
-          <Text style={styles.statLabel}>All time</Text>
-          <Text style={styles.statValue}>{formatLiters(stats.allTime)}</Text>
-        </Animated.View>
-
-        {allTimeChart.labels.length > 0 && (
-          <Animated.View style={[styles.chartCard, animatedCardStyle]}>
-            {isAllTimeChartScrollable ? (
+            <Animated.View style={[styles.chartCard, animatedCardStyle]}>
               <ScrollView
                 horizontal
                 contentContainerStyle={styles.chartScrollContent}
                 showsHorizontalScrollIndicator
               >
                 <BarChart
+                  key={`today-${chartRenderKey}`}
                   data={{
-                    labels: allTimeChart.labels,
-                    datasets: [{ data: allTimeChart.values }],
+                    labels: todayChart.labels,
+                    datasets: [{ data: todayChart.values }],
                   }}
-                  width={allTimeChartWidth}
+                  width={hourlyChartWidth}
                   height={190}
                   yAxisLabel=""
                   yAxisSuffix=" L"
@@ -440,25 +365,151 @@ export default function StatisticsScreen() {
                   style={styles.chart}
                 />
               </ScrollView>
-            ) : (
-              <BarChart
-                data={{
-                  labels: allTimeChart.labels,
-                  datasets: [{ data: allTimeChart.values }],
-                }}
-                width={allTimeChartWidth}
-                height={190}
-                yAxisLabel=""
-                yAxisSuffix=" L"
-                chartConfig={chartConfig}
-                fromZero
-                showValuesOnTopOfBars
-                style={styles.chart}
-              />
+              {isHourlyChartScrollable && <ChartSwipeHint />}
+            </Animated.View>
+
+            <Animated.View style={[styles.statRow, animatedCardStyle]}>
+              <Text style={styles.statLabel}>This week</Text>
+              <Text style={styles.statValue}>{formatLiters(stats.week)}</Text>
+            </Animated.View>
+
+            <Animated.View style={[styles.chartCard, animatedCardStyle]}>
+              <ScrollView
+                horizontal
+                contentContainerStyle={styles.chartScrollContent}
+                showsHorizontalScrollIndicator
+              >
+                <BarChart
+                  key={`week-${chartRenderKey}`}
+                  data={{
+                    labels: weeklyChart.labels,
+                    datasets: [{ data: weeklyChart.values }],
+                  }}
+                  width={chartWidth}
+                  height={190}
+                  yAxisLabel=""
+                  yAxisSuffix=" L"
+                  chartConfig={chartConfig}
+                  fromZero
+                  showValuesOnTopOfBars
+                  style={styles.chart}
+                />
+              </ScrollView>
+              {isWeeklyChartScrollable && <ChartSwipeHint />}
+            </Animated.View>
+
+            <Animated.View style={[styles.statRow, animatedCardStyle]}>
+              <Text style={styles.statLabel}>This month</Text>
+              <Text style={styles.statValue}>{formatLiters(stats.month)}</Text>
+            </Animated.View>
+
+            <Animated.View style={[styles.chartCard, animatedCardStyle]}>
+              <ScrollView
+                horizontal
+                contentContainerStyle={styles.chartScrollContent}
+                showsHorizontalScrollIndicator
+              >
+                <BarChart
+                  key={`month-${chartRenderKey}`}
+                  data={{
+                    labels: monthlyChart.labels,
+                    datasets: [{ data: monthlyChart.values }],
+                  }}
+                  width={monthlyChartWidth}
+                  height={190}
+                  yAxisLabel=""
+                  yAxisSuffix=" L"
+                  chartConfig={chartConfig}
+                  fromZero
+                  showValuesOnTopOfBars
+                  style={styles.chart}
+                />
+              </ScrollView>
+              {isMonthlyChartScrollable && <ChartSwipeHint />}
+            </Animated.View>
+
+            <Animated.View style={[styles.statRow, animatedCardStyle]}>
+              <Text style={styles.statLabel}>This year</Text>
+              <Text style={styles.statValue}>{formatLiters(stats.year)}</Text>
+            </Animated.View>
+
+            <Animated.View style={[styles.chartCard, animatedCardStyle]}>
+              <ScrollView
+                horizontal
+                contentContainerStyle={styles.chartScrollContent}
+                showsHorizontalScrollIndicator
+              >
+                <BarChart
+                  key={`year-${chartRenderKey}`}
+                  data={{
+                    labels: yearlyChart.labels,
+                    datasets: [{ data: yearlyChart.values }],
+                  }}
+                  width={yearlyChartWidth}
+                  height={190}
+                  yAxisLabel=""
+                  yAxisSuffix=" L"
+                  chartConfig={chartConfig}
+                  fromZero
+                  showValuesOnTopOfBars
+                  style={styles.chart}
+                />
+              </ScrollView>
+              {isYearlyChartScrollable && <ChartSwipeHint />}
+            </Animated.View>
+
+            <Animated.View style={[styles.statRow, animatedCardStyle]}>
+              <Text style={styles.statLabel}>All time</Text>
+              <Text style={styles.statValue}>
+                {formatLiters(stats.allTime)}
+              </Text>
+            </Animated.View>
+
+            {allTimeChart.labels.length > 0 && (
+              <Animated.View style={[styles.chartCard, animatedCardStyle]}>
+                {isAllTimeChartScrollable ? (
+                  <ScrollView
+                    horizontal
+                    contentContainerStyle={styles.chartScrollContent}
+                    showsHorizontalScrollIndicator
+                  >
+                    <BarChart
+                      key={`all-time-scroll-${chartRenderKey}`}
+                      data={{
+                        labels: allTimeChart.labels,
+                        datasets: [{ data: allTimeChart.values }],
+                      }}
+                      width={allTimeChartWidth}
+                      height={190}
+                      yAxisLabel=""
+                      yAxisSuffix=" L"
+                      chartConfig={chartConfig}
+                      fromZero
+                      showValuesOnTopOfBars
+                      style={styles.chart}
+                    />
+                  </ScrollView>
+                ) : (
+                  <BarChart
+                    key={`all-time-${chartRenderKey}`}
+                    data={{
+                      labels: allTimeChart.labels,
+                      datasets: [{ data: allTimeChart.values }],
+                    }}
+                    width={allTimeChartWidth}
+                    height={190}
+                    yAxisLabel=""
+                    yAxisSuffix=" L"
+                    chartConfig={chartConfig}
+                    fromZero
+                    showValuesOnTopOfBars
+                    style={styles.chart}
+                  />
+                )}
+              </Animated.View>
             )}
-          </Animated.View>
+          </ScrollView>
         )}
-        </ScrollView>
       </SafeAreaView>
     </ScreenBackground>
   );
@@ -471,6 +522,18 @@ const styles = StyleSheet.create({
   content: {
     padding: 20,
     paddingBottom: 80,
+  },
+  loadingContent: {
+    alignItems: 'center',
+    flex: 1,
+    justifyContent: 'center',
+    padding: 20,
+  },
+  loadingText: {
+    color: '#24566A',
+    fontSize: 15,
+    fontWeight: '600',
+    marginTop: 12,
   },
   title: {
     color: '#173B4A',
