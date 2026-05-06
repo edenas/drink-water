@@ -1,4 +1,4 @@
-import { router, useFocusEffect } from 'expo-router';
+import { router, useFocusEffect, useLocalSearchParams } from 'expo-router';
 import { useCallback, useRef } from 'react';
 import {
   Animated,
@@ -12,25 +12,26 @@ import { SafeAreaView } from 'react-native-safe-area-context';
 
 import ScreenBackground from '@/components/ScreenBackground';
 import { appButtonStyles } from '@/constants/buttonStyles';
+import { useI18n } from '@/logic/i18n';
 
 const sections = [
   {
-    title: 'Profile',
-    text: 'Set weight, gender, activity level, and optional age.',
+    titleKey: 'profile.title',
+    textKey: 'how.profileText',
   },
   {
-    title: 'Home',
-    text: 'Choose or type water amount and press Add water.',
+    titleKey: 'nav.home',
+    textKey: 'how.homeText',
   },
   {
-    title: 'Statistics',
-    text: 'Review daily, weekly, monthly, yearly, and all-time progress.',
+    titleKey: 'statistics.title',
+    textKey: 'how.statisticsText',
   },
   {
-    title: 'Settings',
-    text: 'Manage reminders, clear data, and access support/info pages.',
+    titleKey: 'settings.title',
+    textKey: 'how.settingsText',
   },
-];
+] as const;
 
 function InfoButton({ label, onPress }: { label: string; onPress: () => void }) {
   return (
@@ -50,9 +51,19 @@ function InfoButton({ label, onPress }: { label: string; onPress: () => void }) 
 }
 
 export default function HowToUseScreen() {
+  const { t } = useI18n();
+  const { source } = useLocalSearchParams<{ source?: string }>();
   const entranceAnimation = useRef(new Animated.Value(0)).current;
 
   const handleBackPress = () => {
+    if (source === 'firstLaunch') {
+      router.replace({
+        pathname: '/terms',
+        params: { showAgreement: 'true' },
+      });
+      return;
+    }
+
     router.replace('/settings');
   };
 
@@ -89,24 +100,19 @@ export default function HowToUseScreen() {
     <ScreenBackground>
       <SafeAreaView style={styles.container}>
         <ScrollView contentContainerStyle={styles.content}>
-          <InfoButton label="Back" onPress={handleBackPress} />
+          <InfoButton label={t('back')} onPress={handleBackPress} />
 
           <Animated.View style={[styles.card, entranceAnimatedStyle]}>
-            <Text style={styles.title}>How to use</Text>
-            <Text style={styles.bodyText}>
-              Use this app to track your daily water intake, set your profile
-              information, view your daily progress, check statistics, and
-              enable optional water reminder notifications.
-              {'\n\n'}
-              The app helps you stay aware of your hydration habits, but it
-              should not replace professional medical advice.
-            </Text>
+            <Text style={styles.title}>{t('how.title')}</Text>
+            <Text style={styles.bodyText}>{t('how.body')}</Text>
 
             <View style={styles.sectionList}>
               {sections.map((section) => (
-                <View key={section.title} style={styles.infoSection}>
-                  <Text style={styles.sectionTitle}>{section.title}</Text>
-                  <Text style={styles.sectionText}>{section.text}</Text>
+                <View key={section.titleKey} style={styles.infoSection}>
+                  <Text style={styles.sectionTitle}>
+                    {t(section.titleKey)}
+                  </Text>
+                  <Text style={styles.sectionText}>{t(section.textKey)}</Text>
                 </View>
               ))}
             </View>

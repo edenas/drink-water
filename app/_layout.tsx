@@ -23,6 +23,7 @@ import {
   hasAcceptedTermsStorageKey,
   TermsAcceptanceContext,
 } from '@/logic/termsAcceptance';
+import { I18nProvider, useI18n } from '@/logic/i18n';
 
 const Notifications = getNotificationsModule();
 
@@ -39,6 +40,7 @@ if (Notifications !== null) {
 }
 
 function TabsLayout() {
+  const { hasLoadedLanguage, t } = useI18n();
   const segments = useSegments();
   const insets = useSafeAreaInsets();
   const bottomInset = insets.bottom;
@@ -113,7 +115,7 @@ function TabsLayout() {
     }
   }, [hasAcceptedTerms, hasCheckedTerms, segments, startupPhase]);
 
-  if (startupPhase === 'splash' || !hasCheckedTerms) {
+  if (startupPhase === 'splash' || !hasCheckedTerms || !hasLoadedLanguage) {
     return (
       <Animated.View style={[styles.screen, { opacity: splashOpacity }]}>
         <ScreenBackground style={styles.splashContainer}>
@@ -175,7 +177,7 @@ function TabsLayout() {
         <Tabs.Screen
           name="index"
           options={{
-            title: 'Home',
+            title: t('nav.home'),
             tabBarIcon: ({ color, size }) => (
               <View style={tabIconContainerStyle}>
                 <Ionicons name="home" color={color} size={size} />
@@ -186,7 +188,7 @@ function TabsLayout() {
         <Tabs.Screen
           name="statistics"
           options={{
-            title: 'Statistics',
+            title: t('nav.statistics'),
             tabBarIcon: ({ color, size }) => (
               <View style={tabIconContainerStyle}>
                 <Ionicons name="stats-chart" color={color} size={size} />
@@ -197,7 +199,7 @@ function TabsLayout() {
         <Tabs.Screen
           name="profile"
           options={{
-            title: 'Profile',
+            title: t('nav.profile'),
             tabBarIcon: ({ color, size }) => (
               <View style={tabIconContainerStyle}>
                 <Ionicons name="person" color={color} size={size} />
@@ -208,7 +210,7 @@ function TabsLayout() {
         <Tabs.Screen
           name="settings"
           options={{
-            title: 'Settings',
+            title: t('nav.settings'),
             tabBarIcon: ({ color, size }) => (
               <View style={tabIconContainerStyle}>
                 <Ionicons name="settings" color={color} size={size} />
@@ -220,7 +222,7 @@ function TabsLayout() {
           name="terms"
           options={{
             href: null,
-            title: 'Terms',
+            title: t('nav.terms'),
             tabBarStyle: styles.hiddenTabBar,
           }}
         />
@@ -228,7 +230,7 @@ function TabsLayout() {
           name="support"
           options={{
             href: null,
-            title: 'Support',
+            title: t('nav.support'),
           }}
         />
         <Tabs.Screen
@@ -236,7 +238,7 @@ function TabsLayout() {
           options={{
             href: null,
             tabBarStyle: styles.hiddenTabBar,
-            title: 'Disclaimer',
+            title: t('nav.disclaimer'),
           }}
         />
         <Tabs.Screen
@@ -244,7 +246,7 @@ function TabsLayout() {
           options={{
             href: null,
             tabBarStyle: styles.hiddenTabBar,
-            title: 'How to use',
+            title: t('nav.howToUse'),
           }}
         />
         <Tabs.Screen
@@ -252,7 +254,7 @@ function TabsLayout() {
           options={{
             href: null,
             tabBarStyle: styles.hiddenTabBar,
-            title: 'Privacy Policy',
+            title: t('nav.privacyPolicy'),
           }}
         />
       </Tabs>
@@ -264,7 +266,9 @@ function TabsLayout() {
 export default function Layout() {
   return (
     <SafeAreaProvider>
-      <TabsLayout />
+      <I18nProvider>
+        <TabsLayout />
+      </I18nProvider>
     </SafeAreaProvider>
   );
 }

@@ -17,18 +17,20 @@ import {
   hasAcceptedTermsStorageKey,
   useTermsAcceptance,
 } from '@/logic/termsAcceptance';
+import { useI18n } from '@/logic/i18n';
 
 type TermsLink = {
-  label: string;
+  labelKey: 'nav.disclaimer' | 'nav.privacyPolicy';
   pathname: '/disclaimer' | '/privacy-policy';
 };
 
 const termsLinks: TermsLink[] = [
-  { label: 'Disclaimer', pathname: '/disclaimer' },
-  { label: 'Privacy Policy', pathname: '/privacy-policy' },
+  { labelKey: 'nav.disclaimer', pathname: '/disclaimer' },
+  { labelKey: 'nav.privacyPolicy', pathname: '/privacy-policy' },
 ];
 
 export default function TermsScreen() {
+  const { t } = useI18n();
   const { showAgreement: shouldShowAgreementImmediately } =
     useLocalSearchParams<{ showAgreement?: string }>();
   const { setHasAcceptedTerms } = useTermsAcceptance();
@@ -132,7 +134,7 @@ export default function TermsScreen() {
           {showAgreement && (
             <Animated.View style={[styles.card, cardAnimatedStyle]}>
               <Text style={styles.question}>
-                Do you agree to the app terms?
+                {t('terms.question')}
               </Text>
 
               <View style={styles.linkRow}>
@@ -142,7 +144,7 @@ export default function TermsScreen() {
                     hitSlop={8}
                     onPress={() => handleTermsLinkPress(link.pathname)}
                   >
-                    <Text style={styles.linkText}>{link.label}</Text>
+                    <Text style={styles.linkText}>{t(link.labelKey)}</Text>
                   </Pressable>
                 ))}
               </View>
@@ -154,7 +156,7 @@ export default function TermsScreen() {
                 ]}
                 onPress={handleAgreePress}
               >
-                <Text style={styles.buttonText}>I agree</Text>
+                <Text style={styles.buttonText}>{t('terms.agree')}</Text>
               </Pressable>
 
               <Pressable
@@ -166,7 +168,7 @@ export default function TermsScreen() {
                 onPress={handleDeclinePress}
               >
                 <Text style={[styles.buttonText, styles.secondaryButtonText]}>
-                  I do not agree
+                  {t('terms.disagree')}
                 </Text>
               </Pressable>
             </Animated.View>

@@ -11,6 +11,7 @@ import { SafeAreaView } from 'react-native-safe-area-context';
 
 import ScreenBackground from '@/components/ScreenBackground';
 import { appButtonStyles } from '@/constants/buttonStyles';
+import { useI18n } from '@/logic/i18n';
 
 function InfoButton({ label, onPress }: { label: string; onPress: () => void }) {
   return (
@@ -30,6 +31,7 @@ function InfoButton({ label, onPress }: { label: string; onPress: () => void }) 
 }
 
 export default function DisclaimerScreen() {
+  const { t } = useI18n();
   const { source } = useLocalSearchParams<{ source?: string }>();
   const entranceAnimation = useRef(new Animated.Value(0)).current;
 
@@ -75,30 +77,11 @@ export default function DisclaimerScreen() {
     <ScreenBackground>
       <SafeAreaView style={styles.container}>
         <ScrollView contentContainerStyle={styles.content}>
-          <InfoButton label="Back" onPress={handleBackPress} />
+          <InfoButton label={t('back')} onPress={handleBackPress} />
 
           <Animated.View style={[styles.card, entranceAnimatedStyle]}>
-            <Text style={styles.title}>Disclaimer</Text>
-            <Text style={styles.bodyText}>
-              Drink Water is designed for general information and reminder
-              purposes only. It is not medical advice, diagnosis, or treatment.
-              {'\n\n'}
-              The daily water goal shown in this app is only an estimate based
-              on the information you provide, such as weight, gender, activity
-              level, and optional age.
-              {'\n\n'}
-              Individual hydration needs can vary depending on health
-              conditions, medication, climate, diet, pregnancy, physical
-              activity, and other factors.
-              {'\n\n'}
-              If you need accurate personal hydration advice, please consult a
-              qualified healthcare professional.
-              {'\n\n'}
-              By using this app, you understand that you are responsible for
-              your own health decisions. The developer is not responsible for
-              any health issues, losses, or damages related to the use of this
-              app.
-            </Text>
+            <Text style={styles.title}>{t('disclaimer.title')}</Text>
+            <Text style={styles.bodyText}>{t('disclaimer.body')}</Text>
           </Animated.View>
         </ScrollView>
       </SafeAreaView>

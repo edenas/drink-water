@@ -13,6 +13,7 @@ import { SafeAreaView } from 'react-native-safe-area-context';
 
 import ScreenBackground from '@/components/ScreenBackground';
 import { appButtonStyles } from '@/constants/buttonStyles';
+import { useI18n } from '@/logic/i18n';
 
 const kofiUrl = 'https://ko-fi.com/edenaspocius';
 
@@ -48,6 +49,7 @@ function SupportButton({
 }
 
 export default function SupportScreen() {
+  const { t } = useI18n();
   const entranceAnimation = useRef(new Animated.Value(0)).current;
 
   const handleBackPress = () => {
@@ -92,7 +94,7 @@ export default function SupportScreen() {
       <SafeAreaView style={styles.container}>
         <ScrollView contentContainerStyle={styles.content}>
           <SupportButton
-            label="Back"
+            label={t('back')}
             onPress={handleBackPress}
             variant="secondary"
           />
@@ -103,14 +105,9 @@ export default function SupportScreen() {
               resizeMode="contain"
               style={styles.kofiLogo}
             />
-            <Text style={styles.title}>Support this app</Text>
-            <Text style={styles.message}>
-              If you enjoy using Drink Water, you can support the developer and
-              help improve the app.
-            </Text>
-            <Text style={styles.smallLine}>
-              Every coffee helps
-            </Text>
+            <Text style={styles.title}>{t('support.title')}</Text>
+            <Text style={styles.message}>{t('support.message')}</Text>
+            <Text style={styles.smallLine}>{t('support.highlight')}</Text>
 
             <Pressable
               style={({ pressed }) => [
@@ -125,7 +122,7 @@ export default function SupportScreen() {
                 style={styles.kofiButtonImage}
               />
             </Pressable>
-            <Text style={styles.trustText}>Secure payment via Ko-fi</Text>
+            <Text style={styles.trustText}>{t('support.footer')}</Text>
           </Animated.View>
         </ScrollView>
       </SafeAreaView>

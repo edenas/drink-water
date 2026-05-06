@@ -11,6 +11,7 @@ import { SafeAreaView } from 'react-native-safe-area-context';
 
 import ScreenBackground from '@/components/ScreenBackground';
 import { appButtonStyles } from '@/constants/buttonStyles';
+import { useI18n } from '@/logic/i18n';
 
 function InfoButton({ label, onPress }: { label: string; onPress: () => void }) {
   return (
@@ -30,6 +31,7 @@ function InfoButton({ label, onPress }: { label: string; onPress: () => void }) 
 }
 
 export default function PrivacyPolicyScreen() {
+  const { t } = useI18n();
   const { source } = useLocalSearchParams<{ source?: string }>();
   const entranceAnimation = useRef(new Animated.Value(0)).current;
 
@@ -75,38 +77,11 @@ export default function PrivacyPolicyScreen() {
     <ScreenBackground>
       <SafeAreaView style={styles.container}>
         <ScrollView contentContainerStyle={styles.content}>
-          <InfoButton label="Back" onPress={handleBackPress} />
+          <InfoButton label={t('back')} onPress={handleBackPress} />
 
           <Animated.View style={[styles.card, entranceAnimatedStyle]}>
-            <Text style={styles.title}>Privacy Policy</Text>
-            <Text style={styles.bodyText}>
-              Drink Water does not collect, store, or send your personal
-              information to any external server.
-              {'\n\n'}
-              The app does not use an external database, user account system, or
-              cloud storage.
-              {'\n\n'}
-              Any information you enter, such as weight, gender, activity
-              level, or optional age, is stored locally on your device only.
-              This information is used only inside the app to calculate an
-              estimated daily water goal and improve your personal experience.
-              {'\n\n'}
-              The developer cannot see, access, or collect your personal data.
-              {'\n\n'}
-              You can use the app without entering personal profile
-              information. If you choose not to provide this information, the
-              app will use default values.
-              {'\n\n'}
-              You can clear your profile settings and statistics data at any
-              time from the Settings screen.
-              {'\n\n'}
-              Drink Water is intended for general information and reminder
-              purposes only. It is not medical advice, diagnosis, or treatment.
-              {'\n\n'}
-              By using this app, you understand that you are responsible for
-              your own health decisions and for the information you choose to
-              enter.
-            </Text>
+            <Text style={styles.title}>{t('privacy.title')}</Text>
+            <Text style={styles.bodyText}>{t('privacy.body')}</Text>
           </Animated.View>
         </ScrollView>
       </SafeAreaView>

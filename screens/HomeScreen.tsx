@@ -24,6 +24,7 @@ import {
   canUseLocalNotifications,
   getNotificationsModule,
 } from '@/logic/notifications';
+import { useI18n } from '@/logic/i18n';
 import { getWaterStatus } from '@/logic/waterStatus';
 
 const defaultDailyGoal = 2000;
@@ -51,6 +52,7 @@ const getDefaultWaterStepAmount = (gender: string | null) => {
 };
 
 export default function HomeScreen() {
+  const { t } = useI18n();
   const insets = useSafeAreaInsets();
   const topContentInset = Math.max(insets.top * 0.35, 12);
   const bottomContentInset = Math.max(insets.bottom, 28);
@@ -243,8 +245,8 @@ export default function HomeScreen() {
     await Notifications.cancelAllScheduledNotificationsAsync();
     await Notifications.scheduleNotificationAsync({
       content: {
-        title: 'Drink Water',
-        body: 'Time to drink some water.',
+        title: t('notification.title'),
+        body: t('notification.body'),
       },
       trigger: {
         type: Notifications.SchedulableTriggerInputTypes.TIME_INTERVAL,
@@ -339,6 +341,12 @@ export default function HomeScreen() {
   const progressPercent =
     dailyGoal > 0 ? Math.min(Math.round((waterAmount / dailyGoal) * 100), 100) : 0;
   const waterStatus = getWaterStatus(waterAmount, dailyGoal);
+  const waterStatusTranslationKey =
+    `status.${waterStatus.statusText}` as
+      | 'status.low'
+      | 'status.medium'
+      | 'status.good'
+      | 'status.perfect';
   const animatedProgressWidth = progressAnimation.interpolate({
     inputRange: [0, 100],
     outputRange: [0, 260],
@@ -422,7 +430,7 @@ export default function HomeScreen() {
           style={[styles.notificationToggle, entranceAnimatedStyle]}
         >
           <Text style={styles.notificationToggleLabel}>
-            Water{'\n'}Reminder
+            {t('home.waterReminder')}
           </Text>
           <View style={styles.notificationSwitchWrapper}>
             <Pressable
@@ -452,7 +460,7 @@ export default function HomeScreen() {
                 ]}
               >
                 <Text style={styles.notificationToggleText}>
-                  {notificationsEnabled ? 'ON' : 'OFF'}
+                  {notificationsEnabled ? t('on') : t('off')}
                 </Text>
               </Animated.View>
             </Pressable>
@@ -460,9 +468,11 @@ export default function HomeScreen() {
         </Animated.View>
 
         <Animated.View style={[styles.card, entranceAnimatedStyle]}>
-          <Text style={styles.title}>Today</Text>
+          <Text style={styles.title}>{t('home.today')}</Text>
           <Text style={styles.waterAmountText}>{waterAmount} ml</Text>
-          <Text style={styles.subtitle}>Daily goal: {dailyGoal} ml</Text>
+          <Text style={styles.subtitle}>
+            {t('home.dailyGoal')}: {dailyGoal} ml
+          </Text>
           <View style={styles.progressBar}>
             <Animated.View
               style={[styles.progressFill, { width: animatedProgressWidth }]}
@@ -470,13 +480,15 @@ export default function HomeScreen() {
           </View>
           <Text style={styles.progressText}>{progressPercent}%</Text>
           <Text style={[styles.statusText, { color: waterStatus.statusColor }]}>
-            {waterStatus.statusText}
+            {t(waterStatusTranslationKey)}
           </Text>
         </Animated.View>
 
         <Animated.View style={[styles.card, entranceAnimatedStyle]}>
           <View style={styles.selectedAmountPill}>
-            <Text style={styles.selectedAmountLabel}>Selected amount</Text>
+            <Text style={styles.selectedAmountLabel}>
+              {t('home.selectedAmount')}
+            </Text>
             <View style={styles.selectedAmountInputRow}>
               <TextInput
                 style={styles.selectedAmountInput}
@@ -502,7 +514,7 @@ export default function HomeScreen() {
             <View style={[styles.sliderThumb, { left: sliderFillWidth }]} />
           </View>
 
-          <WaterButton label="Add water" onPress={addWater} />
+          <WaterButton label={t('home.addWater')} onPress={addWater} />
         </Animated.View>
       </View>
     </ScreenBackground>

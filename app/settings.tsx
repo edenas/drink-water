@@ -25,6 +25,7 @@ import {
   canUseLocalNotifications,
   getNotificationsModule,
 } from '@/logic/notifications';
+import { AppLanguage, useI18n } from '@/logic/i18n';
 
 const weightStorageKey = 'weight';
 const ageStorageKey = 'age';
@@ -60,54 +61,69 @@ function SettingsButton({ label, onPress }: SettingsButtonProps) {
 }
 
 export default function SettingsScreen() {
+  const { language, setLanguage, t } = useI18n();
   const [notificationsEnabled, setNotificationsEnabled] = useState(false);
   const [notificationHours, setNotificationHours] = useState('1');
   const [notificationMinutes, setNotificationMinutes] = useState('0');
   const [saveMessage, setSaveMessage] = useState('');
-  const entranceAnimation = useRef(new Animated.Value(0)).current;
+  const entranceAnimation = useRef(new Animated.Value(1)).current;
   const waterAnimationRef = useRef<WaterBackgroundAnimationRef>(null);
 
-  useEffect(() => {
-    const loadSettings = async () => {
-      const savedNotificationsEnabled = await AsyncStorage.getItem(
-        notificationsEnabledStorageKey
-      );
-      const savedNotificationHours = await AsyncStorage.getItem(
-        notificationHoursStorageKey
-      );
-      const savedNotificationMinutes = await AsyncStorage.getItem(
-        notificationMinutesStorageKey
-      );
+  const loadSettings = useCallback(async () => {
+    const savedNotificationsEnabled = await AsyncStorage.getItem(
+      notificationsEnabledStorageKey
+    );
+    const savedNotificationHours = await AsyncStorage.getItem(
+      notificationHoursStorageKey
+    );
+    const savedNotificationMinutes = await AsyncStorage.getItem(
+      notificationMinutesStorageKey
+    );
 
-      if (savedNotificationsEnabled !== null) {
-        setNotificationsEnabled(savedNotificationsEnabled === 'true');
-      }
+    if (savedNotificationsEnabled !== null) {
+      setNotificationsEnabled(savedNotificationsEnabled === 'true');
+    }
 
-      if (savedNotificationHours !== null) {
-        setNotificationHours(savedNotificationHours);
-      }
+    if (savedNotificationHours !== null) {
+      setNotificationHours(savedNotificationHours);
+    }
 
-      if (savedNotificationMinutes !== null) {
-        setNotificationMinutes(savedNotificationMinutes);
-      }
-    };
+    if (savedNotificationMinutes !== null) {
+      setNotificationMinutes(savedNotificationMinutes);
+    }
 
-    loadSettings();
   }, []);
+
+  useEffect(() => {
+    setSaveMessage('');
+  }, [language]);
 
   useFocusEffect(
     useCallback(() => {
+      loadSettings();
+      entranceAnimation.stopAnimation();
       entranceAnimation.setValue(0);
       Animated.timing(entranceAnimation, {
         toValue: 1,
         duration: 420,
         useNativeDriver: true,
-      }).start();
-    }, [entranceAnimation])
+      }).start(({ finished }) => {
+        if (!finished) {
+          entranceAnimation.setValue(1);
+        }
+      });
+
+      return () => {
+        entranceAnimation.stopAnimation((value) => {
+          if (value < 1) {
+            entranceAnimation.setValue(1);
+          }
+        });
+      };
+    }, [entranceAnimation, loadSettings])
   );
 
   const entranceAnimatedStyle = {
-    opacity: entranceAnimation,
     transform: [
       {
         translateY: entranceAnimation.interpolate({
@@ -118,7 +134,7 @@ export default function SettingsScreen() {
       {
         scale: entranceAnimation.interpolate({
           inputRange: [0, 1],
-          outputRange: [0.97, 1],
+          outputRange: [0.99, 1],
         }),
       },
     ],
@@ -143,7 +159,7 @@ export default function SettingsScreen() {
     const intervalSeconds = getNotificationIntervalSeconds();
 
     if (intervalSeconds < 60) {
-      setSaveMessage('Use at least 1 minute');
+      setSaveMessage(t('settings.useAtLeastMinute'));
       return false;
     }
 
@@ -160,15 +176,15 @@ export default function SettingsScreen() {
     const permission = await Notifications.requestPermissionsAsync();
 
     if (!permission.granted) {
-      setSaveMessage('Notifications permission denied');
+      setSaveMessage(t('settings.notificationsDenied'));
       return false;
     }
 
     await Notifications.cancelAllScheduledNotificationsAsync();
     await Notifications.scheduleNotificationAsync({
       content: {
-        title: 'Drink Water',
-        body: 'Time to drink some water.',
+        title: t('notification.title'),
+        body: t('notification.body'),
       },
       trigger: {
         type: Notifications.SchedulableTriggerInputTypes.TIME_INTERVAL,
@@ -190,7 +206,7 @@ export default function SettingsScreen() {
       if (Notifications !== null) {
         await Notifications.cancelAllScheduledNotificationsAsync();
       }
-      setSaveMessage('\u2713 Water reminder disabled');
+      setSaveMessage(t('settings.reminderDisabled'));
     }
   };
 
@@ -214,14 +230,14 @@ export default function SettingsScreen() {
       if (Notifications !== null) {
         await Notifications.cancelAllScheduledNotificationsAsync();
       }
-      setSaveMessage('\u2713 Water reminder saved');
+      setSaveMessage(t('settings.reminderSaved'));
       return;
     }
 
     const didSchedule = await scheduleNotifications();
 
     if (didSchedule) {
-      setSaveMessage('\u2713 Water reminder saved');
+      setSaveMessage(t('settings.reminderSaved'));
     }
   };
 
@@ -236,7 +252,7 @@ export default function SettingsScreen() {
       activityLevelStorageKey,
     ]);
 
-    setSaveMessage('\u2713 Settings cleared');
+    setSaveMessage(t('settings.settingsCleared'));
   };
 
   const handleClearStatistics = async () => {
@@ -251,7 +267,12 @@ export default function SettingsScreen() {
       lastSavedDateStorageKey,
     ]);
 
-    setSaveMessage('\u2713 Statistics cleared');
+    setSaveMessage(t('settings.statisticsCleared'));
+  };
+
+  const handleLanguagePress = async (nextLanguage: AppLanguage) => {
+    waterAnimationRef.current?.trigger();
+    await setLanguage(nextLanguage);
   };
 
   const handleSupportPress = () => {
@@ -259,15 +280,24 @@ export default function SettingsScreen() {
   };
 
   const handleDisclaimerPress = () => {
-    router.push('/disclaimer');
+    router.push({
+      pathname: '/disclaimer',
+      params: { source: 'settings' },
+    });
   };
 
   const handleHowToUsePress = () => {
-    router.push('/how-to-use');
+    router.push({
+      pathname: '/how-to-use',
+      params: { source: 'settings' },
+    });
   };
 
   const handlePrivacyPolicyPress = () => {
-    router.push('/privacy-policy');
+    router.push({
+      pathname: '/privacy-policy',
+      params: { source: 'settings' },
+    });
   };
 
   return (
@@ -280,13 +310,44 @@ export default function SettingsScreen() {
           keyboardShouldPersistTaps="handled"
           onScrollBeginDrag={() => Keyboard.dismiss()}
         >
-          <Text style={styles.title}>Settings</Text>
+          <Text style={styles.title}>{t('settings.title')}</Text>
 
           <Animated.View style={[styles.card, entranceAnimatedStyle]}>
-            <Text style={styles.sectionLabel}>Water reminder</Text>
+            <Text style={styles.sectionLabel}>{t('settings.language')}</Text>
+            <View style={styles.languageOptions}>
+              {(['en', 'lt'] as AppLanguage[]).map((option) => {
+                const isSelected = language === option;
+
+                return (
+                  <Pressable
+                    key={option}
+                    style={[
+                      styles.languageOption,
+                      isSelected && styles.selectedLanguageOption,
+                    ]}
+                    onPress={() => handleLanguagePress(option)}
+                  >
+                    <Text
+                      style={[
+                        styles.languageOptionText,
+                        isSelected && styles.selectedLanguageOptionText,
+                      ]}
+                    >
+                      {option === 'en'
+                        ? t('settings.english')
+                        : t('settings.lithuanian')}
+                    </Text>
+                  </Pressable>
+                );
+              })}
+            </View>
+          </Animated.View>
+
+          <Animated.View style={[styles.card, entranceAnimatedStyle]}>
+            <Text style={styles.sectionLabel}>{t('settings.waterReminder')}</Text>
             <View style={styles.reminderToggleRow}>
               <Text style={styles.reminderLabel}>
-                Remind me to drink water
+                {t('settings.remindMe')}
               </Text>
               <Switch
                 trackColor={{ false: '#D8E3EA', true: '#00AEEF' }}
@@ -297,7 +358,9 @@ export default function SettingsScreen() {
             </View>
             <View style={styles.reminderInputs}>
               <View style={styles.reminderInputGroup}>
-                <Text style={styles.reminderInputLabel}>Hours</Text>
+                <Text style={styles.reminderInputLabel}>
+                  {t('settings.hours')}
+                </Text>
                 <TextInput
                   style={[styles.input, styles.reminderInput]}
                   keyboardType="numeric"
@@ -308,7 +371,9 @@ export default function SettingsScreen() {
                 />
               </View>
               <View style={styles.reminderInputGroup}>
-                <Text style={styles.reminderInputLabel}>Minutes</Text>
+                <Text style={styles.reminderInputLabel}>
+                  {t('settings.minutes')}
+                </Text>
                 <TextInput
                   style={[styles.input, styles.reminderInput]}
                   keyboardType="numeric"
@@ -320,23 +385,27 @@ export default function SettingsScreen() {
               </View>
             </View>
             <SettingsButton
-              label="Save"
+              label={t('save')}
               onPress={handleSaveNotifications}
             />
           </Animated.View>
 
           <Animated.View style={[styles.card, entranceAnimatedStyle]}>
-            <Text style={styles.sectionLabel}>Statistics data</Text>
+            <Text style={styles.sectionLabel}>
+              {t('settings.statisticsData')}
+            </Text>
             <SettingsButton
-              label="Clear statistics"
+              label={t('settings.clearStatistics')}
               onPress={handleClearStatistics}
             />
           </Animated.View>
 
           <Animated.View style={[styles.card, entranceAnimatedStyle]}>
-            <Text style={styles.sectionLabel}>User settings</Text>
+            <Text style={styles.sectionLabel}>
+              {t('settings.userSettings')}
+            </Text>
             <SettingsButton
-              label="Clear user settings"
+              label={t('settings.clearUserSettings')}
               onPress={handleClearUserSettings}
             />
           </Animated.View>
@@ -344,17 +413,19 @@ export default function SettingsScreen() {
           <Text style={styles.saveMessage}>{saveMessage}</Text>
 
           <Animated.View style={[styles.card, entranceAnimatedStyle]}>
-            <Text style={styles.sectionLabel}>App information</Text>
+            <Text style={styles.sectionLabel}>
+              {t('settings.appInformation')}
+            </Text>
             <SettingsButton
-              label="Disclaimer"
+              label={t('nav.disclaimer')}
               onPress={handleDisclaimerPress}
             />
             <SettingsButton
-              label="How to use"
+              label={t('nav.howToUse')}
               onPress={handleHowToUsePress}
             />
             <SettingsButton
-              label="Privacy Policy"
+              label={t('nav.privacyPolicy')}
               onPress={handlePrivacyPolicyPress}
             />
           </Animated.View>
@@ -367,12 +438,13 @@ export default function SettingsScreen() {
               resizeMode="contain"
               style={styles.kofiLogo}
             />
-            <Text style={styles.supportTitle}>Support this app</Text>
+            <Text style={styles.supportTitle}>{t('support.title')}</Text>
             <Text style={styles.supportMessage}>
-              If you enjoy using Drink Water, you can support the developer and
-              help improve the app.
+              {t('support.message')}
             </Text>
-            <Text style={styles.supportHighlight}>Every coffee helps</Text>
+            <Text style={styles.supportHighlight}>
+              {t('support.highlight')}
+            </Text>
             <Pressable
               style={({ pressed }) => [
                 styles.kofiButton,
@@ -386,7 +458,7 @@ export default function SettingsScreen() {
                 style={styles.kofiButtonImage}
               />
             </Pressable>
-            <Text style={styles.supportFooter}>Secure payment via Ko-fi</Text>
+            <Text style={styles.supportFooter}>{t('support.footer')}</Text>
           </Animated.View>
         </ScrollView>
       </SafeAreaView>
@@ -541,6 +613,33 @@ const styles = StyleSheet.create({
   },
   reminderInput: {
     marginBottom: 0,
+  },
+  languageOptions: {
+    flexDirection: 'row',
+    gap: 12,
+    marginTop: 18,
+  },
+  languageOption: {
+    alignItems: 'center',
+    backgroundColor: '#F4FBFF',
+    borderColor: '#D4EEF8',
+    borderRadius: 18,
+    borderWidth: 1,
+    flex: 1,
+    paddingHorizontal: 14,
+    paddingVertical: 12,
+  },
+  selectedLanguageOption: {
+    backgroundColor: '#00AEEF',
+    borderColor: '#00AEEF',
+  },
+  languageOptionText: {
+    color: '#24566A',
+    fontSize: 16,
+    fontWeight: '700',
+  },
+  selectedLanguageOptionText: {
+    color: '#ffffff',
   },
   saveMessage: {
     color: '#007FB1',

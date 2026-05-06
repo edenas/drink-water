@@ -20,6 +20,7 @@ import WaterBackgroundAnimation, {
   WaterBackgroundAnimationRef,
 } from '@/components/WaterBackgroundAnimation';
 import WaterButton from '@/components/WaterButton';
+import { useI18n } from '@/logic/i18n';
 
 const weightStorageKey = 'weight';
 const ageStorageKey = 'age';
@@ -27,6 +28,7 @@ const genderStorageKey = 'gender';
 const activityLevelStorageKey = 'activityLevel';
 
 export default function ProfileScreen() {
+  const { t } = useI18n();
   const [weight, setWeight] = useState('');
   const [age, setAge] = useState('');
   const [gender, setGender] = useState<string | null>(null);
@@ -92,7 +94,7 @@ export default function ProfileScreen() {
   const handleSave = async () => {
     waterAnimationRef.current?.trigger();
     Keyboard.dismiss();
-    const message = hasSavedSettings ? '\u2713 Updated' : '\u2713 Saved';
+    const message = hasSavedSettings ? t('updated') : t('saved');
 
     await AsyncStorage.setItem(weightStorageKey, weight);
     await AsyncStorage.setItem(ageStorageKey, age);
@@ -125,30 +127,30 @@ export default function ProfileScreen() {
           contentContainerStyle={styles.content}
           keyboardShouldPersistTaps="handled"
         >
-          <Text style={styles.title}>Profile</Text>
+          <Text style={styles.title}>{t('profile.title')}</Text>
 
           <Animated.View style={[styles.card, entranceAnimatedStyle]}>
-            <Text style={styles.label}>Weight</Text>
+            <Text style={styles.label}>{t('profile.weight')}</Text>
             <TextInput
               style={styles.input}
               keyboardType="numeric"
               value={weight}
               onChangeText={setWeight}
-              placeholder="Enter weight"
+              placeholder={t('profile.enterWeight')}
               placeholderTextColor="#8AA7B6"
             />
 
-            <Text style={styles.label}>Age</Text>
+            <Text style={styles.label}>{t('profile.age')}</Text>
             <TextInput
               style={styles.input}
               keyboardType="numeric"
               value={age}
               onChangeText={handleAgeChange}
-              placeholder="e.g. 30"
+              placeholder={t('profile.agePlaceholder')}
               placeholderTextColor="#8AA7B6"
             />
 
-            <Text style={styles.label}>Gender</Text>
+            <Text style={styles.label}>{t('profile.gender')}</Text>
             <View style={styles.options}>
               <TouchableOpacity
                 style={[
@@ -163,7 +165,7 @@ export default function ProfileScreen() {
                     gender === 'male' && styles.selectedOptionText,
                   ]}
                 >
-                  Male
+                  {t('profile.male')}
                 </Text>
               </TouchableOpacity>
               <TouchableOpacity
@@ -179,12 +181,12 @@ export default function ProfileScreen() {
                     gender === 'female' && styles.selectedOptionText,
                   ]}
                 >
-                  Female
+                  {t('profile.female')}
                 </Text>
               </TouchableOpacity>
             </View>
 
-            <Text style={styles.label}>Activity level</Text>
+            <Text style={styles.label}>{t('profile.activityLevel')}</Text>
             <View style={styles.options}>
               <TouchableOpacity
                 style={[
@@ -199,7 +201,7 @@ export default function ProfileScreen() {
                     activityLevel === 'low' && styles.selectedOptionText,
                   ]}
                 >
-                  Low
+                  {t('profile.low')}
                 </Text>
               </TouchableOpacity>
               <TouchableOpacity
@@ -215,7 +217,7 @@ export default function ProfileScreen() {
                     activityLevel === 'medium' && styles.selectedOptionText,
                   ]}
                 >
-                  Medium
+                  {t('profile.medium')}
                 </Text>
               </TouchableOpacity>
               <TouchableOpacity
@@ -231,16 +233,18 @@ export default function ProfileScreen() {
                     activityLevel === 'high' && styles.selectedOptionText,
                   ]}
                 >
-                  High
+                  {t('profile.high')}
                 </Text>
               </TouchableOpacity>
             </View>
 
             <Text style={styles.settingsActionLabel}>
-              {hasSavedSettings ? 'Update settings' : 'Save settings'}
+              {hasSavedSettings
+                ? t('profile.updateSettings')
+                : t('profile.saveSettings')}
             </Text>
             <WaterButton
-              label={hasSavedSettings ? 'Update' : 'Save'}
+              label={hasSavedSettings ? t('update') : t('save')}
               onPress={handleSave}
             />
             <Text style={styles.saveMessage}>{saveMessage}</Text>
