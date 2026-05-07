@@ -1,14 +1,29 @@
 import { useRef } from 'react';
-import { Animated, Pressable, StyleSheet, Text } from 'react-native';
+import {
+  Animated,
+  Pressable,
+  StyleProp,
+  StyleSheet,
+  Text,
+  TextStyle,
+  ViewStyle,
+} from 'react-native';
 
 import { appButtonStyles } from '@/constants/buttonStyles';
 
 type WaterButtonProps = {
   onPress: () => void;
   label: string;
+  buttonStyle?: StyleProp<ViewStyle>;
+  textStyle?: StyleProp<TextStyle>;
 };
 
-export default function WaterButton({ onPress, label }: WaterButtonProps) {
+export default function WaterButton({
+  onPress,
+  label,
+  buttonStyle,
+  textStyle,
+}: WaterButtonProps) {
   const scale = useRef(new Animated.Value(1)).current;
 
   const animateScale = (value: number) => {
@@ -25,13 +40,14 @@ export default function WaterButton({ onPress, label }: WaterButtonProps) {
       <Pressable
         style={({ pressed }) => [
           styles.button,
+          buttonStyle,
           pressed && styles.buttonPressed,
         ]}
         onPress={onPress}
         onPressIn={() => animateScale(0.97)}
         onPressOut={() => animateScale(1)}
       >
-        <Text style={styles.buttonText}>{label}</Text>
+        <Text style={[styles.buttonText, textStyle]}>{label}</Text>
       </Pressable>
     </Animated.View>
   );

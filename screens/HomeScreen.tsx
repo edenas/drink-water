@@ -7,11 +7,22 @@ import {
   LayoutChangeEvent,
   PanResponder,
   Pressable,
+  ScrollView,
   StyleSheet,
   Text,
   TextInput,
   View,
 } from 'react-native';
+import Svg, {
+  Circle,
+  ClipPath,
+  Defs,
+  G,
+  LinearGradient,
+  Mask,
+  Path,
+  Stop,
+} from 'react-native-svg';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 
 import ScreenBackground from '@/components/ScreenBackground';
@@ -28,6 +39,7 @@ import { useI18n } from '@/logic/i18n';
 import { getWaterStatus } from '@/logic/waterStatus';
 
 const defaultDailyGoal = 2000;
+const defaultWaterStepAmount = 200;
 const maxWaterStepAmount = 1000;
 const maxManualWaterStepAmount = 9999;
 const waterAmountStorageKey = 'waterAmount';
@@ -42,39 +54,39 @@ const activityLevelStorageKey = 'activityLevel';
 const notificationsEnabledStorageKey = 'notificationsEnabled';
 const notificationHoursStorageKey = 'notificationHours';
 const notificationMinutesStorageKey = 'notificationMinutes';
-
-const getDefaultWaterStepAmount = (gender: string | null) => {
-  if (gender === 'male') {
-    return 35;
-  }
-
-  return 30;
-};
+const progressCircleSize = 206;
+const progressCircleStrokeWidth = 18;
 
 export default function HomeScreen() {
   const { t } = useI18n();
   const insets = useSafeAreaInsets();
-  const topContentInset = Math.max(insets.top * 0.35, 12);
-  const bottomContentInset = Math.max(insets.bottom, 28);
+  const topContentInset = Math.max(insets.top * 0.2, 8);
+  const bottomContentInset = Math.max(insets.bottom * 0.5, 14);
   const [waterAmount, setWaterAmount] = useState(0);
   const [allTimeWaterAmount, setAllTimeWaterAmount] = useState(0);
   const [waterHistory, setWaterHistory] = useState<Record<string, number>>({});
   const [hourlyWaterHistory, setHourlyWaterHistory] = useState<
     Record<string, Record<string, number>>
   >({});
-  const [waterStepAmount, setWaterStepAmount] = useState(30);
+  const [waterStepAmount, setWaterStepAmount] = useState(
+    defaultWaterStepAmount
+  );
   const [dailyGoal, setDailyGoal] = useState(defaultDailyGoal);
   const [lastSavedDate, setLastSavedDate] = useState<string | null>(null);
   const [sliderWidth, setSliderWidth] = useState(0);
   const [hasLoadedStorage, setHasLoadedStorage] = useState(false);
   const [notificationsEnabled, setNotificationsEnabled] = useState(false);
-  const [waterStepAmountInput, setWaterStepAmountInput] = useState('30');
+  const [waterStepAmountInput, setWaterStepAmountInput] = useState(
+    String(defaultWaterStepAmount)
+  );
+  const [waterStepControlAmount, setWaterStepControlAmount] = useState(
+    defaultWaterStepAmount
+  );
   const [isEditingWaterStepAmount, setIsEditingWaterStepAmount] =
     useState(false);
   const sliderWidthRef = useRef(0);
-  const waterStepAmountRef = useRef(30);
-  const panStartWaterStepAmountRef = useRef(30);
-  const progressAnimation = useRef(new Animated.Value(0)).current;
+  const waterStepAmountRef = useRef(defaultWaterStepAmount);
+  const panStartWaterStepAmountRef = useRef(defaultWaterStepAmount);
   const notificationToggleAnimation = useRef(new Animated.Value(0)).current;
   const entranceAnimation = useRef(new Animated.Value(0)).current;
   const waterAnimationRef = useRef<WaterBackgroundAnimationRef>(null);
@@ -127,7 +139,8 @@ export default function HomeScreen() {
         : {}
     );
 
-    setWaterStepAmount(getDefaultWaterStepAmount(savedGender));
+    setWaterStepAmount(defaultWaterStepAmount);
+    setWaterStepControlAmount(defaultWaterStepAmount);
 
     setDailyGoal(
       calculateDailyWaterGoal(
@@ -335,6 +348,17 @@ export default function HomeScreen() {
     setWaterStepAmountInput(String(nextWaterStepAmount));
   };
 
+  const adjustWaterStepAmount = (direction: -1 | 1) => {
+    const nextWaterStepAmount = Math.min(
+      Math.max(waterStepAmount + waterStepControlAmount * direction, 0),
+      maxWaterStepAmount
+    );
+
+    setIsEditingWaterStepAmount(false);
+    setWaterStepAmount(nextWaterStepAmount);
+    setWaterStepAmountInput(String(nextWaterStepAmount));
+  };
+
   const sliderValue = Math.min(waterStepAmount, maxWaterStepAmount);
   const sliderFillWidth = sliderWidth * (sliderValue / maxWaterStepAmount);
 
@@ -348,18 +372,37 @@ export default function HomeScreen() {
       | 'status.good'
       | 'status.perfect';
   const milliliterUnit = t('unit.ml');
-  const animatedProgressWidth = progressAnimation.interpolate({
-    inputRange: [0, 100],
-    outputRange: [0, 260],
-  });
-
-  useEffect(() => {
-    Animated.timing(progressAnimation, {
-      toValue: progressPercent,
-      duration: 420,
-      useNativeDriver: false,
-    }).start();
-  }, [progressAnimation, progressPercent]);
+  const circleRadius =
+    (progressCircleSize - progressCircleStrokeWidth) / 2;
+  const circleCenter = progressCircleSize / 2;
+  const circleCircumference = 2 * Math.PI * circleRadius;
+  const circleStrokeDashOffset =
+    circleCircumference * (1 - progressPercent / 100);
+  const visualWaterFillRatio = Math.max(progressPercent / 100, 0.29);
+  const waterFillTop =
+    progressCircleSize -
+    progressCircleStrokeWidth -
+    (progressCircleSize - progressCircleStrokeWidth * 2) *
+      visualWaterFillRatio;
+  const waterWaveOverscan = progressCircleSize * 0.65;
+  const waterWaveLeft = -waterWaveOverscan;
+  const waterWaveRight = progressCircleSize + waterWaveOverscan;
+  const waterWaveBottom = progressCircleSize + waterWaveOverscan;
+  const waterWavePath = `
+    M ${waterWaveLeft} ${waterFillTop + 16}
+    C ${progressCircleSize * -0.2} ${waterFillTop - 18}, ${
+      progressCircleSize * 0.04
+    } ${waterFillTop + 34}, ${progressCircleSize * 0.28} ${waterFillTop + 15}
+    C ${progressCircleSize * 0.48} ${waterFillTop - 2}, ${
+      progressCircleSize * 0.62
+    } ${waterFillTop + 28}, ${progressCircleSize * 0.82} ${waterFillTop + 10}
+    C ${progressCircleSize * 1.03} ${waterFillTop - 10}, ${
+      progressCircleSize * 1.22
+    } ${waterFillTop + 24}, ${waterWaveRight} ${waterFillTop + 8}
+    L ${waterWaveRight} ${waterWaveBottom}
+    L ${waterWaveLeft} ${waterWaveBottom}
+    Z
+  `;
 
   useEffect(() => {
     Animated.timing(notificationToggleAnimation, {
@@ -418,8 +461,10 @@ export default function HomeScreen() {
       }}
     >
       <WaterBackgroundAnimation ref={waterAnimationRef} />
-      <View
-        style={[
+      <ScrollView
+        showsVerticalScrollIndicator={false}
+        style={styles.scroll}
+        contentContainerStyle={[
           styles.content,
           {
             paddingTop: topContentInset,
@@ -453,7 +498,7 @@ export default function HomeScreen() {
                       {
                         translateX: notificationToggleAnimation.interpolate({
                           inputRange: [0, 1],
-                          outputRange: [0, 20],
+                          outputRange: [0, 24],
                         }),
                       },
                     ],
@@ -468,58 +513,202 @@ export default function HomeScreen() {
           </View>
         </Animated.View>
 
-        <Animated.View style={[styles.card, entranceAnimatedStyle]}>
+        <Animated.View
+          style={[styles.card, styles.todayCard, entranceAnimatedStyle]}
+        >
           <Text style={styles.title}>{t('home.today')}</Text>
-          <Text style={styles.waterAmountText}>
-            {waterAmount} {milliliterUnit}
-          </Text>
-          <Text style={styles.subtitle}>
-            {t('home.dailyGoal')}: {dailyGoal} {milliliterUnit}
-          </Text>
-          <View style={styles.progressBar}>
-            <Animated.View
-              style={[styles.progressFill, { width: animatedProgressWidth }]}
-            />
+
+          <View style={styles.progressCircleWrapper}>
+            <Svg
+              width={progressCircleSize}
+              height={progressCircleSize}
+              viewBox={`0 0 ${progressCircleSize} ${progressCircleSize}`}
+            >
+              <Defs>
+                <LinearGradient
+                  id="waterFillGradient"
+                  x1="0"
+                  y1="0"
+                  x2="0"
+                  y2="1"
+                >
+                  <Stop offset="0" stopColor="#61D9FF" stopOpacity="0.72" />
+                  <Stop offset="0.55" stopColor="#1DB7F4" stopOpacity="0.9" />
+                  <Stop offset="1" stopColor="#009EE8" stopOpacity="0.95" />
+                </LinearGradient>
+                <LinearGradient
+                  id="progressStrokeGradient"
+                  x1="0"
+                  y1="0"
+                  x2="1"
+                  y2="1"
+                >
+                  <Stop offset="0" stopColor="#E8F8FF" />
+                  <Stop offset="0.48" stopColor="#94E2FF" />
+                  <Stop offset="1" stopColor="#28BDF4" />
+                </LinearGradient>
+                <ClipPath id="waterCircleClip">
+                  <Circle
+                    cx={circleCenter}
+                    cy={circleCenter}
+                    r={circleRadius - 10}
+                  />
+                </ClipPath>
+                <Mask id="waterCircleMask">
+                  <Circle
+                    cx={circleCenter}
+                    cy={circleCenter}
+                    r={circleRadius - 10}
+                    fill="#ffffff"
+                  />
+                </Mask>
+              </Defs>
+
+              <Circle
+                cx={circleCenter}
+                cy={circleCenter}
+                r={circleRadius - 4}
+                fill="#ffffff"
+                stroke="rgba(214, 244, 255, 0.88)"
+                strokeWidth={progressCircleStrokeWidth + 6}
+              />
+
+              <Circle
+                cx={circleCenter}
+                cy={circleCenter}
+                r={circleRadius}
+                fill="transparent"
+                stroke="rgba(183, 232, 250, 0.5)"
+                strokeWidth={progressCircleStrokeWidth}
+              />
+
+              <G
+                clipPath="url(#waterCircleClip)"
+                mask="url(#waterCircleMask)"
+              >
+                <Path d={waterWavePath} fill="url(#waterFillGradient)" />
+                <Path
+                  d={waterWavePath}
+                  fill="rgba(120, 219, 255, 0.3)"
+                  transform="translate(-34 -24)"
+                />
+                <Path
+                  d={waterWavePath}
+                  fill="rgba(255,255,255,0.18)"
+                  transform="translate(38 -10)"
+                />
+              </G>
+
+              <Circle
+                cx={circleCenter}
+                cy={circleCenter}
+                r={circleRadius - 10}
+                fill="transparent"
+                stroke="rgba(255, 255, 255, 0.82)"
+                strokeWidth={2}
+              />
+
+              <Circle
+                cx={circleCenter}
+                cy={circleCenter}
+                r={circleRadius}
+                fill="transparent"
+                stroke="url(#progressStrokeGradient)"
+                strokeLinecap="round"
+                strokeWidth={progressCircleStrokeWidth}
+                strokeDasharray={`${circleCircumference} ${circleCircumference}`}
+                strokeDashoffset={circleStrokeDashOffset}
+                rotation="-90"
+                origin={`${circleCenter}, ${circleCenter}`}
+              />
+            </Svg>
+
+            <View style={styles.progressCircleCenter}>
+              <Text
+                style={styles.waterAmountText}
+                numberOfLines={1}
+                adjustsFontSizeToFit
+              >
+                {waterAmount} {milliliterUnit}
+              </Text>
+              <Text style={styles.goalText}>
+                {t('home.ofDailyGoal')} {dailyGoal} {milliliterUnit}
+              </Text>
+            </View>
+
+            <View style={styles.progressBadge}>
+              <Text style={styles.progressBadgeText}>{progressPercent}%</Text>
+            </View>
           </View>
-          <Text style={styles.progressText}>{progressPercent}%</Text>
+
           <Text style={[styles.statusText, { color: waterStatus.statusColor }]}>
             {t(waterStatusTranslationKey)}
           </Text>
         </Animated.View>
 
-        <Animated.View style={[styles.card, entranceAnimatedStyle]}>
-          <View style={styles.selectedAmountPill}>
-            <Text style={styles.selectedAmountLabel}>
-              {t('home.selectedAmount')}
-            </Text>
-            <View style={styles.selectedAmountInputRow}>
-              <TextInput
-                style={styles.selectedAmountInput}
-                value={waterStepAmountInput}
-                keyboardType="number-pad"
-                maxLength={4}
-                onBlur={handleWaterStepAmountBlur}
-                onChangeText={handleWaterStepAmountChange}
-                onFocus={() => setIsEditingWaterStepAmount(true)}
-                selectTextOnFocus
-              />
-              <Text style={styles.selectedAmountUnit}>{milliliterUnit}</Text>
+        <Animated.View
+          style={[styles.card, styles.addWaterCard, entranceAnimatedStyle]}
+        >
+          <Text style={styles.addWaterTitle}>{t('home.addWater')}</Text>
+
+          <View style={styles.selectedAmountInputRow}>
+            <TextInput
+              style={styles.selectedAmountInput}
+              value={waterStepAmountInput}
+              keyboardType="number-pad"
+              maxLength={4}
+              onBlur={handleWaterStepAmountBlur}
+              onChangeText={handleWaterStepAmountChange}
+              onFocus={() => setIsEditingWaterStepAmount(true)}
+              selectTextOnFocus
+            />
+            <Text style={styles.selectedAmountUnit}>{milliliterUnit}</Text>
+          </View>
+
+          <View style={styles.amountControlRow}>
+            <Pressable
+              accessibilityRole="button"
+              style={({ pressed }) => [
+                styles.amountStepButton,
+                pressed && styles.amountStepButtonPressed,
+              ]}
+              onPress={() => adjustWaterStepAmount(-1)}
+            >
+              <Text style={styles.amountStepButtonText}>-</Text>
+            </Pressable>
+
+            <View
+              style={styles.slider}
+              onLayout={handleSliderLayout}
+              {...panResponder.panHandlers}
+            >
+              <View style={styles.sliderTrack} />
+              <View style={[styles.sliderFill, { width: sliderFillWidth }]} />
+              <View style={[styles.sliderThumb, { left: sliderFillWidth }]} />
             </View>
+
+            <Pressable
+              accessibilityRole="button"
+              style={({ pressed }) => [
+                styles.amountStepButton,
+                pressed && styles.amountStepButtonPressed,
+              ]}
+              onPress={() => adjustWaterStepAmount(1)}
+            >
+              <Text style={styles.amountStepButtonText}>+</Text>
+            </Pressable>
           </View>
 
-          <View
-            style={styles.slider}
-            onLayout={handleSliderLayout}
-            {...panResponder.panHandlers}
-          >
-            <View style={styles.sliderTrack} />
-            <View style={[styles.sliderFill, { width: sliderFillWidth }]} />
-            <View style={[styles.sliderThumb, { left: sliderFillWidth }]} />
+          <View style={styles.addWaterButtonWrapper}>
+            <WaterButton
+              label={t('home.addWater')}
+              onPress={addWater}
+              buttonStyle={styles.addWaterButton}
+              textStyle={styles.addWaterButtonText}
+            />
           </View>
-
-          <WaterButton label={t('home.addWater')} onPress={addWater} />
         </Animated.View>
-      </View>
+      </ScrollView>
     </ScreenBackground>
   );
 }
@@ -528,35 +717,37 @@ const styles = StyleSheet.create({
   container: {
     flex: 1,
     alignItems: 'center',
-    paddingHorizontal: 20,
+    paddingHorizontal: 18,
   },
   notificationToggle: {
     alignSelf: 'flex-end',
-    backgroundColor: 'rgba(255, 255, 255, 0.9)',
-    borderColor: 'rgba(189, 238, 255, 0.9)',
-    borderRadius: 22,
+    backgroundColor: 'rgba(255, 255, 255, 0.94)',
+    borderColor: 'rgba(255, 255, 255, 0.96)',
+    borderRadius: 999,
     borderWidth: 1,
-    elevation: 3,
+    elevation: 4,
     alignItems: 'center',
     flexDirection: 'row',
     gap: 12,
     justifyContent: 'center',
+    minHeight: 48,
+    minWidth: 158,
     paddingHorizontal: 14,
-    paddingVertical: 7,
+    paddingVertical: 6,
     shadowColor: '#6CAFD0',
     shadowOffset: {
       width: 0,
-      height: 8,
+      height: 10,
     },
-    shadowOpacity: 0.14,
-    shadowRadius: 14,
+    shadowOpacity: 0.1,
+    shadowRadius: 20,
   },
   notificationToggleLabel: {
-    color: '#6B7C85',
-    fontSize: 11,
-    fontWeight: '500',
-    lineHeight: 13,
-    minWidth: 54,
+    color: '#6C8192',
+    fontSize: 12,
+    fontWeight: '800',
+    lineHeight: 15,
+    minWidth: 68,
     textAlign: 'right',
   },
   notificationSwitchWrapper: {
@@ -564,12 +755,12 @@ const styles = StyleSheet.create({
     justifyContent: 'center',
   },
   notificationSwitchTrack: {
-    backgroundColor: '#D8E3EA',
-    borderRadius: 16,
-    height: 32,
+    backgroundColor: '#DCE7EE',
+    borderRadius: 999,
+    height: 36,
     justifyContent: 'center',
-    padding: 2,
-    width: 52,
+    padding: 3,
+    width: 60,
   },
   notificationSwitchTrackOn: {
     backgroundColor: '#00AEEF',
@@ -577,105 +768,136 @@ const styles = StyleSheet.create({
   notificationSwitchThumb: {
     alignItems: 'center',
     backgroundColor: '#ffffff',
-    borderRadius: 14,
-    height: 28,
+    borderRadius: 999,
+    height: 30,
     justifyContent: 'center',
-    width: 28,
+    shadowColor: '#7CAFC7',
+    shadowOffset: {
+      width: 0,
+      height: 4,
+    },
+    shadowOpacity: 0.13,
+    shadowRadius: 8,
+    width: 30,
   },
   notificationToggleText: {
     color: '#007FB1',
     fontSize: 10,
-    fontWeight: '700',
+    fontWeight: '800',
     textAlign: 'center',
   },
-  content: {
+  scroll: {
     flex: 1,
-    gap: 20,
+    maxWidth: 400,
+    width: '100%',
+  },
+  content: {
+    flexGrow: 1,
+    gap: 12,
     justifyContent: 'center',
-    maxWidth: 360,
+    maxWidth: 400,
+    minHeight: '100%',
     width: '100%',
   },
   card: {
     alignItems: 'center',
-    backgroundColor: 'rgba(255, 255, 255, 0.92)',
-    borderRadius: 24,
-    elevation: 4,
+    backgroundColor: 'rgba(255, 255, 255, 0.965)',
+    borderRadius: 28,
+    elevation: 5,
     paddingHorizontal: 20,
-    paddingVertical: 28,
-    shadowColor: '#6CAFD0',
+    paddingVertical: 20,
+    shadowColor: '#7ABFDD',
     shadowOffset: {
       width: 0,
-      height: 10,
+      height: 12,
     },
-    shadowOpacity: 0.14,
-    shadowRadius: 18,
+    shadowOpacity: 0.12,
+    shadowRadius: 20,
     width: '100%',
   },
+  todayCard: {
+    paddingBottom: 24,
+    paddingTop: 22,
+  },
+  addWaterCard: {
+    paddingBottom: 22,
+    paddingHorizontal: 24,
+    paddingTop: 20,
+  },
   title: {
-    color: '#173B4A',
-    fontSize: 24,
-    fontWeight: '600',
+    color: '#073052',
+    fontSize: 25,
+    fontWeight: '800',
     marginBottom: 14,
   },
-  subtitle: {
-    color: '#6B7C85',
-    fontSize: 14,
-    fontWeight: '500',
-    marginBottom: 18,
+  addWaterTitle: {
+    color: '#073052',
+    fontSize: 18,
+    fontWeight: '800',
+    marginBottom: 10,
   },
   waterAmountText: {
-    color: '#007FB1',
-    fontSize: 56,
+    color: '#003052',
+    fontSize: 36,
+    fontWeight: '800',
+    includeFontPadding: false,
+    maxWidth: 154,
+    textAlign: 'center',
+  },
+  goalText: {
+    color: '#6D8191',
+    fontSize: 14,
     fontWeight: '700',
-    marginBottom: 10,
+    marginTop: 6,
+    textAlign: 'center',
   },
-  progressBar: {
-    width: 260,
-    height: 14,
-    backgroundColor: '#BDEEFF',
-    borderRadius: 999,
-    overflow: 'hidden',
-    marginBottom: 10,
-  },
-  progressFill: {
-    height: '100%',
-    backgroundColor: '#00AEEF',
-    borderRadius: 999,
-  },
-  progressText: {
-    color: '#24566A',
-    fontSize: 17,
-    fontWeight: '600',
-    marginBottom: 12,
-  },
-  statusText: {
-    fontSize: 19,
-    fontWeight: '700',
-    textTransform: 'capitalize',
-  },
-  selectedAmountPill: {
+  progressCircleWrapper: {
     alignItems: 'center',
-    backgroundColor: '#F4FBFF',
-    borderColor: '#D4EEF8',
-    borderRadius: 20,
-    borderWidth: 1,
-    elevation: 2,
-    marginBottom: 18,
-    paddingHorizontal: 18,
-    paddingVertical: 14,
-    shadowColor: '#6CAFD0',
+    height: progressCircleSize,
+    justifyContent: 'center',
+    marginBottom: 22,
+    width: progressCircleSize,
+  },
+  progressCircleCenter: {
+    alignItems: 'center',
+    height: 104,
+    justifyContent: 'center',
+    left: (progressCircleSize - 164) / 2,
+    position: 'absolute',
+    top: (progressCircleSize - 104) / 2,
+    width: 164,
+  },
+  progressBadge: {
+    alignItems: 'center',
+    backgroundColor: '#11AEEF',
+    borderColor: '#ffffff',
+    borderRadius: 999,
+    borderWidth: 0,
+    bottom: 8,
+    elevation: 6,
+    height: 56,
+    justifyContent: 'center',
+    position: 'absolute',
+    right: 0,
+    shadowColor: '#0087BD',
     shadowOffset: {
       width: 0,
-      height: 6,
+      height: 8,
     },
-    shadowOpacity: 0.1,
-    shadowRadius: 10,
+    shadowOpacity: 0.2,
+    shadowRadius: 12,
+    width: 56,
   },
-  selectedAmountLabel: {
-    color: '#6B7C85',
-    fontSize: 13,
-    fontWeight: '500',
-    marginBottom: 10,
+  progressBadgeText: {
+    color: '#ffffff',
+    fontSize: 16,
+    fontWeight: '800',
+  },
+  statusText: {
+    fontSize: 18,
+    fontWeight: '800',
+    letterSpacing: 0.2,
+    textTransform: 'capitalize',
   },
   selectedAmountInputRow: {
     alignItems: 'center',
@@ -683,52 +905,103 @@ const styles = StyleSheet.create({
     flexDirection: 'row',
     gap: 3,
     justifyContent: 'center',
+    marginBottom: 16,
     maxWidth: '100%',
   },
   selectedAmountInput: {
-    color: '#173B4A',
-    fontSize: 32,
-    fontWeight: '700',
-    maxWidth: 86,
-    minWidth: 42,
+    color: '#003052',
+    fontSize: 38,
+    fontWeight: '800',
+    maxWidth: 116,
+    minWidth: 48,
     padding: 0,
     textAlign: 'center',
   },
   selectedAmountUnit: {
-    color: '#173B4A',
-    fontSize: 32,
-    fontWeight: '700',
+    color: '#003052',
+    fontSize: 36,
+    fontWeight: '800',
+  },
+  amountControlRow: {
+    alignItems: 'center',
+    flexDirection: 'row',
+    gap: 18,
+    marginBottom: 8,
+    width: '100%',
+  },
+  amountStepButton: {
+    alignItems: 'center',
+    backgroundColor: 'rgba(255, 255, 255, 0.72)',
+    borderColor: '#DDF3FF',
+    borderRadius: 999,
+    borderWidth: 2,
+    height: 44,
+    justifyContent: 'center',
+    shadowColor: '#9AC9DD',
+    shadowOffset: {
+      width: 0,
+      height: 6,
+    },
+    shadowOpacity: 0.09,
+    shadowRadius: 12,
+    width: 44,
+  },
+  amountStepButtonPressed: {
+    backgroundColor: '#F1FBFF',
+    transform: [{ scale: 0.97 }],
+  },
+  amountStepButtonText: {
+    color: '#073052',
+    fontSize: 28,
+    fontWeight: '800',
+    includeFontPadding: false,
+    lineHeight: 32,
+    textAlign: 'center',
   },
   slider: {
-    width: 260,
-    height: 36,
+    flex: 1,
+    height: 34,
     justifyContent: 'center',
   },
   sliderTrack: {
-    height: 8,
-    backgroundColor: '#BDEEFF',
+    height: 10,
+    backgroundColor: '#DDF4FF',
     borderRadius: 999,
   },
   sliderFill: {
     position: 'absolute',
-    height: 8,
-    backgroundColor: '#00AEEF',
+    height: 10,
+    backgroundColor: '#1AAFF0',
     borderRadius: 999,
   },
   sliderThumb: {
     position: 'absolute',
-    width: 26,
-    height: 26,
-    marginLeft: -13,
-    borderRadius: 13,
-    backgroundColor: '#00AEEF',
-    elevation: 3,
+    width: 30,
+    height: 30,
+    marginLeft: -15,
+    borderColor: '#1AAFF0',
+    borderRadius: 15,
+    borderWidth: 2,
+    backgroundColor: '#ffffff',
+    elevation: 4,
     shadowColor: '#0087BD',
     shadowOffset: {
       width: 0,
-      height: 4,
+      height: 5,
     },
-    shadowOpacity: 0.22,
-    shadowRadius: 8,
+    shadowOpacity: 0.16,
+    shadowRadius: 9,
+  },
+  addWaterButtonWrapper: {
+    alignSelf: 'center',
+    width: '70%',
+  },
+  addWaterButton: {
+    borderRadius: 16,
+    height: 48,
+    marginTop: 8,
+  },
+  addWaterButtonText: {
+    fontSize: 16,
   },
 });
