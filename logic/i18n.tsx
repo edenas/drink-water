@@ -30,7 +30,8 @@ export type AppLanguage =
   | 'fr'
   | 'de'
   | 'pl'
-  | 'uk';
+  | 'uk'
+  | 'fi';
 
 export const appLanguageStorageKey = 'appLanguage';
 
@@ -2625,6 +2626,143 @@ const translations = {
     'how.settingsText':
       'Zarządzaj przypomnieniami, czyść dane i otwieraj strony wsparcia oraz informacji.',
   },
+  fi: {
+    'app.name': 'Drink Water',
+    'nav.home': 'Koti',
+    'nav.statistics': 'Tilastot',
+    'nav.profile': 'Profiili',
+    'nav.settings': 'Asetukset',
+    'nav.terms': 'Ehdot',
+    'nav.support': 'Tuki',
+    'nav.disclaimer': 'Vastuuvapauslauseke',
+    'nav.howToUse': 'Käyttöohje',
+    'nav.privacyPolicy': 'Tietosuojakäytäntö',
+    back: 'Takaisin',
+    save: 'Tallenna',
+    update: 'Päivitä',
+    saved: '✓ Tallennettu',
+    updated: '✓ Päivitetty',
+    on: 'PÄÄLLÄ',
+    off: 'POIS',
+    'unit.ml': 'ml',
+    'unit.liter': 'L',
+    'home.waterReminder': 'Vesi-\nmuistutus',
+    'home.today': 'Tänään',
+    'home.dailyGoal': 'Päivän tavoite',
+    'home.ofDailyGoal': '/',
+    'home.selectedAmount': 'Valittu määrä',
+    'home.addWater': 'Lisää vettä',
+    'notification.title': 'Drink Water',
+    'notification.body': 'On aika juoda vettä.',
+    'status.low': 'matala',
+    'status.medium': 'keskitaso',
+    'status.good': 'hyvä',
+    'status.perfect': 'täydellinen',
+    'status.careful': 'varovasti',
+    'profile.title': 'Profiili',
+    'profile.weight': 'Paino',
+    'profile.enterWeight': 'Syötä paino',
+    'profile.age': 'Ikä',
+    'profile.agePlaceholder': 'esim. 30',
+    'profile.gender': 'Sukupuoli',
+    'profile.male': 'Mies',
+    'profile.female': 'Nainen',
+    'profile.activityLevel': 'Aktiivisuustaso',
+    'profile.low': 'Matala',
+    'profile.medium': 'Keskitaso',
+    'profile.high': 'Korkea',
+    'profile.saveSettings': 'Tallenna asetukset',
+    'profile.updateSettings': 'Päivitä asetukset',
+    'settings.title': 'Asetukset',
+    'settings.loading': 'Ladataan asetuksia...',
+    'settings.language': 'Kieli',
+    'settings.english': 'English',
+    'settings.lithuanian': 'Lietuvių',
+    'settings.latvian': 'Latviešu',
+    'settings.norwegian': 'Norsk',
+    'settings.swedish': 'Svenska',
+    'settings.spanish': 'Español',
+    'settings.japanese': '日本語',
+    'settings.chinese': '中文',
+    'settings.hebrew': 'עברית',
+    'settings.arabic': 'العربية',
+    'settings.korean': '한국어',
+    'settings.portuguese': 'Português',
+    'settings.estonian': 'Eesti',
+    'settings.vietnamese': 'Tiếng Việt',
+    'settings.swahili': 'Kiswahili',
+    'settings.russian': 'Русский',
+    'settings.french': 'Français',
+    'settings.german': 'Deutsch',
+    'settings.polish': 'Polski',
+    'settings.waterReminder': 'Vesimuistutus',
+    'settings.remindMe': 'Muistuta minua juomaan vettä',
+    'settings.hours': 'Tunnit',
+    'settings.minutes': 'Minuutit',
+    'settings.statisticsData': 'Tilastotiedot',
+    'settings.clearStatistics': 'Tyhjennä tilastot',
+    'settings.userSettings': 'Käyttäjäasetukset',
+    'settings.clearUserSettings': 'Tyhjennä käyttäjäasetukset',
+    'settings.appInformation': 'Sovelluksen tiedot',
+    'settings.useAtLeastMinute': 'Käytä vähintään 1 minuuttia',
+    'settings.notificationsDenied': 'Ilmoituslupa evätty',
+    'settings.reminderDisabled': '✓ Vesimuistutus poistettu käytöstä',
+    'settings.reminderSaved': '✓ Vesimuistutus tallennettu',
+    'settings.settingsCleared': '✓ Asetukset tyhjennetty',
+    'settings.statisticsCleared': '✓ Tilastot tyhjennetty',
+    'statistics.title': 'Tilastot',
+    'statistics.loading': 'Ladataan tilastoja...',
+    'statistics.today': 'Tänään',
+    'statistics.thisWeek': 'Tällä viikolla',
+    'statistics.thisMonth': 'Tässä kuussa',
+    'statistics.thisYear': 'Tänä vuonna',
+    'statistics.allTime': 'Kaikki yhteensä',
+    'statistics.swipe': '← Pyyhkäise sivulle →',
+    'week.mon': 'Ma',
+    'week.tue': 'Ti',
+    'week.wed': 'Ke',
+    'week.thu': 'To',
+    'week.fri': 'Pe',
+    'week.sat': 'La',
+    'week.sun': 'Su',
+    'month.jan': 'Tam',
+    'month.feb': 'Hel',
+    'month.mar': 'Maa',
+    'month.apr': 'Huh',
+    'month.may': 'Tou',
+    'month.jun': 'Kes',
+    'month.jul': 'Hei',
+    'month.aug': 'Elo',
+    'month.sep': 'Syy',
+    'month.oct': 'Lok',
+    'month.nov': 'Mar',
+    'month.dec': 'Jou',
+    'support.title': 'Tue sovellusta',
+    'support.message':
+      'Jos pidät Drink Water -sovelluksesta, voit tukea kehittäjää ja auttaa parantamaan sovellusta.',
+    'support.highlight': 'Jokainen kahvi auttaa',
+    'support.footer': 'Turvallinen maksu Ko-fin kautta',
+    'terms.question': 'Hyväksytkö sovelluksen ehdot?',
+    'terms.agree': 'Hyväksyn',
+    'terms.disagree': 'En hyväksy',
+    'disclaimer.title': 'Vastuuvapauslauseke',
+    'disclaimer.body':
+      'Drink Water on tarkoitettu vain yleiseen tiedotukseen ja muistutuksiin. Se ei ole lääketieteellinen neuvo, diagnoosi tai hoito.\n\nSovelluksessa näkyvä päivittäinen vesitavoite on vain arvio, joka perustuu antamiisi tietoihin, kuten painoon, sukupuoleen, aktiivisuustasoon ja valinnaiseen ikään.\n\nYksilöllinen nesteen tarve voi vaihdella terveydentilan, lääkityksen, ilmaston, ruokavalion, raskauden, liikunnan ja muiden tekijöiden mukaan.\n\nJos tarvitset tarkkaa henkilökohtaista nesteytysohjetta, ota yhteyttä pätevään terveydenhuollon ammattilaiseen.\n\nKäyttämällä tätä sovellusta ymmärrät, että olet itse vastuussa terveyttäsi koskevista päätöksistä. Kehittäjä ei vastaa sovelluksen käyttöön liittyvistä terveysongelmista, menetyksistä tai vahingoista.',
+    'privacy.title': 'Tietosuojakäytäntö',
+    'privacy.body':
+      'Drink Water ei kerää, tallenna tai lähetä henkilötietojasi ulkoiselle palvelimelle.\n\nSovellus ei käytä ulkoista tietokantaa, käyttäjätilijärjestelmää tai pilvitallennusta.\n\nKaikki syöttämäsi tiedot, kuten paino, sukupuoli, aktiivisuustaso tai valinnainen ikä, tallennetaan vain paikallisesti laitteellesi. Näitä tietoja käytetään vain sovelluksessa arvioidun päivittäisen vesitavoitteen laskemiseen ja henkilökohtaisen käyttökokemuksen parantamiseen.\n\nKehittäjä ei voi nähdä, käyttää tai kerätä henkilötietojasi.\n\nVoit käyttää sovellusta syöttämättä henkilökohtaisia profiilitietoja. Jos et anna näitä tietoja, sovellus käyttää oletusarvoja.\n\nVoit tyhjentää profiiliasetukset ja tilastotiedot milloin tahansa Asetukset-näytöstä.\n\nDrink Water on tarkoitettu vain yleiseen tiedotukseen ja muistutuksiin. Se ei ole lääketieteellinen neuvo, diagnoosi tai hoito.\n\nKäyttämällä tätä sovellusta ymmärrät, että olet itse vastuussa terveyttäsi koskevista päätöksistä ja syöttämistäsi tiedoista.',
+    'how.title': 'Käyttöohje',
+    'how.body':
+      'Käytä tätä sovellusta päivittäisen vedenjuonnin seuraamiseen, profiilitietojen määrittämiseen, päivän edistymisen katseluun, tilastojen tarkistamiseen ja valinnaisten vesimuistutusten käyttöönottoon.\n\nSovellus auttaa sinua huomaamaan nesteytystottumuksesi paremmin, mutta se ei korvaa ammattilaisen lääketieteellistä neuvontaa.',
+    'how.profileText':
+      'Aseta paino, sukupuoli, aktiivisuustaso ja valinnainen ikä.',
+    'how.homeText':
+      'Valitse tai syötä vesimäärä ja napauta Lisää vettä.',
+    'how.statisticsText':
+      'Tarkastele päivän, viikon, kuukauden, vuoden ja koko ajan edistymistä.',
+    'how.settingsText':
+      'Hallitse muistutuksia, tyhjennä tietoja ja avaa tuki- ja tietosivut.',
+  },
   uk: {
     'app.name': 'Drink Water',
     'nav.home': 'Головна',
@@ -2793,6 +2931,7 @@ const supportedLanguages: AppLanguage[] = [
   'de',
   'pl',
   'uk',
+  'fi',
 ];
 
 const isSupportedLanguage = (
@@ -2881,6 +3020,10 @@ const normalizeLanguage = (language: string | null | undefined): AppLanguage => 
 
   if (normalizedLanguage?.startsWith('uk')) {
     return 'uk';
+  }
+
+  if (normalizedLanguage?.startsWith('fi')) {
+    return 'fi';
   }
 
   return 'en';

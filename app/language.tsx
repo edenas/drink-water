@@ -26,6 +26,7 @@ const languageOptions: AppLanguage[] = [
   'no',
   'pl',
   'pt',
+  'fi',
   'sv',
   'vi',
   'uk',
@@ -137,6 +138,10 @@ export default function LanguageScreen() {
 
     if (nextLanguage === 'uk') {
       return 'Українська';
+    }
+
+    if (nextLanguage === 'fi') {
+      return 'Suomi';
     }
 
     return t('settings.english');

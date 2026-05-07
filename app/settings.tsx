@@ -326,6 +326,10 @@ export default function SettingsScreen() {
       return 'Українська';
     }
 
+    if (language === 'fi') {
+      return 'Suomi';
+    }
+
     return t('settings.english');
   };
 
