@@ -1,7 +1,5 @@
-import { router, useFocusEffect } from 'expo-router';
-import { useCallback, useRef } from 'react';
+import { router } from 'expo-router';
 import {
-  Animated,
   Pressable,
   ScrollView,
   StyleSheet,
@@ -10,6 +8,7 @@ import {
 } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 
+import AnimatedScreenContent from '@/components/AnimatedScreenContent';
 import ScreenBackground from '@/components/ScreenBackground';
 import { appButtonStyles } from '@/constants/buttonStyles';
 import { AppLanguage, useI18n } from '@/logic/i18n';
@@ -61,7 +60,6 @@ function LanguageButton({
 
 export default function LanguageScreen() {
   const { isRtl, language, setLanguage, t } = useI18n();
-  const entranceAnimation = useRef(new Animated.Value(0)).current;
 
   const getLanguageLabel = (nextLanguage: AppLanguage) => {
     if (nextLanguage === 'lt') {
@@ -147,42 +145,14 @@ export default function LanguageScreen() {
     await setLanguage(nextLanguage);
   };
 
-  useFocusEffect(
-    useCallback(() => {
-      entranceAnimation.setValue(0);
-      Animated.timing(entranceAnimation, {
-        toValue: 1,
-        duration: 420,
-        useNativeDriver: true,
-      }).start();
-    }, [entranceAnimation])
-  );
-
-  const entranceAnimatedStyle = {
-    opacity: entranceAnimation,
-    transform: [
-      {
-        translateY: entranceAnimation.interpolate({
-          inputRange: [0, 1],
-          outputRange: [10, 0],
-        }),
-      },
-      {
-        scale: entranceAnimation.interpolate({
-          inputRange: [0, 1],
-          outputRange: [0.97, 1],
-        }),
-      },
-    ],
-  };
-
   return (
     <ScreenBackground>
       <SafeAreaView style={styles.container}>
-        <ScrollView contentContainerStyle={styles.content}>
-          <LanguageButton label={t('back')} onPress={handleBackPress} />
+        <AnimatedScreenContent>
+          <ScrollView contentContainerStyle={styles.content}>
+            <LanguageButton label={t('back')} onPress={handleBackPress} />
 
-          <Animated.View style={[styles.card, entranceAnimatedStyle]}>
+          <View style={styles.card}>
             <Text
               style={[
                 styles.title,
@@ -221,8 +191,9 @@ export default function LanguageScreen() {
                 );
               })}
             </View>
-          </Animated.View>
-        </ScrollView>
+          </View>
+          </ScrollView>
+        </AnimatedScreenContent>
       </SafeAreaView>
     </ScreenBackground>
   );

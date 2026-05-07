@@ -1,9 +1,8 @@
 import AsyncStorage from '@react-native-async-storage/async-storage';
 import { router, useLocalSearchParams } from 'expo-router';
-import { useEffect, useRef, useState } from 'react';
+import { useEffect, useState } from 'react';
 import {
   ActivityIndicator,
-  Animated,
   Pressable,
   StyleSheet,
   Text,
@@ -11,6 +10,7 @@ import {
 } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 
+import AnimatedScreenContent from '@/components/AnimatedScreenContent';
 import ScreenBackground from '@/components/ScreenBackground';
 import { appButtonStyles } from '@/constants/buttonStyles';
 import {
@@ -34,7 +34,6 @@ export default function TermsScreen() {
   const { showAgreement: shouldShowAgreementImmediately } =
     useLocalSearchParams<{ showAgreement?: string }>();
   const { setHasAcceptedTerms } = useTermsAcceptance();
-  const cardAnimation = useRef(new Animated.Value(0)).current;
   const shouldSkipInitialLoading = shouldShowAgreementImmediately === 'true';
   const [isInitialLoading, setIsInitialLoading] = useState(
     !shouldSkipInitialLoading
@@ -56,19 +55,6 @@ export default function TermsScreen() {
     return () => clearTimeout(loadingTimer);
   }, [shouldSkipInitialLoading]);
 
-  useEffect(() => {
-    if (!showAgreement) {
-      cardAnimation.setValue(0);
-      return;
-    }
-
-    Animated.timing(cardAnimation, {
-      toValue: 1,
-      duration: 320,
-      useNativeDriver: true,
-    }).start();
-  }, [cardAnimation, showAgreement]);
-
   const handleAgreePress = async () => {
     await AsyncStorage.setItem(hasAcceptedTermsStorageKey, 'true');
     setHasAcceptedTerms(true);
@@ -87,24 +73,6 @@ export default function TermsScreen() {
 
   const handleTermsLinkPress = (pathname: TermsLink['pathname']) => {
     router.push(`${pathname}?source=firstLaunch`);
-  };
-
-  const cardAnimatedStyle = {
-    opacity: cardAnimation,
-    transform: [
-      {
-        translateY: cardAnimation.interpolate({
-          inputRange: [0, 1],
-          outputRange: [12, 0],
-        }),
-      },
-      {
-        scale: cardAnimation.interpolate({
-          inputRange: [0, 1],
-          outputRange: [0.96, 1],
-        }),
-      },
-    ],
   };
 
   return (
@@ -132,7 +100,12 @@ export default function TermsScreen() {
           </View>
 
           {showAgreement && (
-            <Animated.View style={[styles.card, cardAnimatedStyle]}>
+            <AnimatedScreenContent
+              duration={320}
+              fill={false}
+              style={styles.card}
+              translateY={12}
+            >
               <Text style={[styles.question, isRtl && styles.rtlText]}>
                 {t('terms.question')}
               </Text>
@@ -173,7 +146,7 @@ export default function TermsScreen() {
                   {t('terms.disagree')}
                 </Text>
               </Pressable>
-            </Animated.View>
+            </AnimatedScreenContent>
           )}
         </View>
       </SafeAreaView>

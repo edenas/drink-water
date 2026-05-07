@@ -2,7 +2,6 @@ import AsyncStorage from '@react-native-async-storage/async-storage';
 import { router, useFocusEffect } from 'expo-router';
 import { useCallback, useEffect, useRef, useState } from 'react';
 import {
-  Animated,
   Image,
   Keyboard,
   Linking,
@@ -16,7 +15,9 @@ import {
 } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 
+import AnimatedScreenContent from '@/components/AnimatedScreenContent';
 import ScreenBackground from '@/components/ScreenBackground';
+import ScreenLoading from '@/components/ScreenLoading';
 import WaterBackgroundAnimation, {
   WaterBackgroundAnimationRef,
 } from '@/components/WaterBackgroundAnimation';
@@ -66,30 +67,38 @@ export default function SettingsScreen() {
   const [notificationHours, setNotificationHours] = useState('1');
   const [notificationMinutes, setNotificationMinutes] = useState('0');
   const [saveMessage, setSaveMessage] = useState('');
-  const entranceAnimation = useRef(new Animated.Value(1)).current;
+  const [hasLoadedSettings, setHasLoadedSettings] = useState(false);
   const waterAnimationRef = useRef<WaterBackgroundAnimationRef>(null);
 
   const loadSettings = useCallback(async () => {
-    const savedNotificationsEnabled = await AsyncStorage.getItem(
-      notificationsEnabledStorageKey
-    );
-    const savedNotificationHours = await AsyncStorage.getItem(
-      notificationHoursStorageKey
-    );
-    const savedNotificationMinutes = await AsyncStorage.getItem(
-      notificationMinutesStorageKey
-    );
+    try {
+      const savedNotificationsEnabled = await AsyncStorage.getItem(
+        notificationsEnabledStorageKey
+      );
+      const savedNotificationHours = await AsyncStorage.getItem(
+        notificationHoursStorageKey
+      );
+      const savedNotificationMinutes = await AsyncStorage.getItem(
+        notificationMinutesStorageKey
+      );
 
-    if (savedNotificationsEnabled !== null) {
-      setNotificationsEnabled(savedNotificationsEnabled === 'true');
-    }
+      if (savedNotificationsEnabled !== null) {
+        setNotificationsEnabled(savedNotificationsEnabled === 'true');
+      }
 
-    if (savedNotificationHours !== null) {
-      setNotificationHours(savedNotificationHours);
-    }
+      if (savedNotificationHours !== null) {
+        setNotificationHours(savedNotificationHours);
+      }
 
-    if (savedNotificationMinutes !== null) {
-      setNotificationMinutes(savedNotificationMinutes);
+      if (savedNotificationMinutes !== null) {
+        setNotificationMinutes(savedNotificationMinutes);
+      }
+    } catch {
+      setNotificationsEnabled(false);
+      setNotificationHours('1');
+      setNotificationMinutes('0');
+    } finally {
+      setHasLoadedSettings(true);
     }
 
   }, []);
@@ -100,45 +109,15 @@ export default function SettingsScreen() {
 
   useFocusEffect(
     useCallback(() => {
+      const readyFallbackTimer = setTimeout(() => {
+        setHasLoadedSettings(true);
+      }, 1800);
+
       loadSettings();
-      entranceAnimation.stopAnimation();
-      entranceAnimation.setValue(0);
-      Animated.timing(entranceAnimation, {
-        toValue: 1,
-        duration: 420,
-        useNativeDriver: true,
-      }).start(({ finished }) => {
-        if (!finished) {
-          entranceAnimation.setValue(1);
-        }
-      });
 
-      return () => {
-        entranceAnimation.stopAnimation((value) => {
-          if (value < 1) {
-            entranceAnimation.setValue(1);
-          }
-        });
-      };
-    }, [entranceAnimation, loadSettings])
+      return () => clearTimeout(readyFallbackTimer);
+    }, [loadSettings])
   );
-
-  const entranceAnimatedStyle = {
-    transform: [
-      {
-        translateY: entranceAnimation.interpolate({
-          inputRange: [0, 1],
-          outputRange: [10, 0],
-        }),
-      },
-      {
-        scale: entranceAnimation.interpolate({
-          inputRange: [0, 1],
-          outputRange: [0.99, 1],
-        }),
-      },
-    ],
-  };
 
   const handleNotificationHoursChange = (value: string) => {
     setNotificationHours(value.replace(/\D/g, ''));
@@ -375,21 +354,26 @@ export default function SettingsScreen() {
     });
   };
 
+  if (!hasLoadedSettings) {
+    return <ScreenLoading />;
+  }
+
   return (
     <ScreenBackground>
       <WaterBackgroundAnimation ref={waterAnimationRef} />
       <SafeAreaView style={styles.container}>
-        <ScrollView
-          contentContainerStyle={styles.content}
-          keyboardDismissMode="on-drag"
-          keyboardShouldPersistTaps="handled"
-          onScrollBeginDrag={() => Keyboard.dismiss()}
-        >
+        <AnimatedScreenContent>
+          <ScrollView
+            contentContainerStyle={styles.content}
+            keyboardDismissMode="on-drag"
+            keyboardShouldPersistTaps="handled"
+            onScrollBeginDrag={() => Keyboard.dismiss()}
+          >
           <Text style={[styles.title, isRtl && styles.rtlText]}>
             {t('settings.title')}
           </Text>
 
-          <Animated.View style={[styles.card, entranceAnimatedStyle]}>
+          <View style={styles.card}>
             <Pressable
               style={({ pressed }) => [
                 styles.languageRow,
@@ -408,9 +392,9 @@ export default function SettingsScreen() {
               </View>
               <Text style={styles.languageChevron}>{isRtl ? '‹' : '›'}</Text>
             </Pressable>
-          </Animated.View>
+          </View>
 
-          <Animated.View style={[styles.card, entranceAnimatedStyle]}>
+          <View style={styles.card}>
             <Text style={[styles.sectionLabel, isRtl && styles.rtlText]}>
               {t('settings.waterReminder')}
             </Text>
@@ -463,9 +447,9 @@ export default function SettingsScreen() {
               label={t('save')}
               onPress={handleSaveNotifications}
             />
-          </Animated.View>
+          </View>
 
-          <Animated.View style={[styles.card, entranceAnimatedStyle]}>
+          <View style={styles.card}>
             <Text style={[styles.sectionLabel, isRtl && styles.rtlText]}>
               {t('settings.statisticsData')}
             </Text>
@@ -473,9 +457,9 @@ export default function SettingsScreen() {
               label={t('settings.clearStatistics')}
               onPress={handleClearStatistics}
             />
-          </Animated.View>
+          </View>
 
-          <Animated.View style={[styles.card, entranceAnimatedStyle]}>
+          <View style={styles.card}>
             <Text style={[styles.sectionLabel, isRtl && styles.rtlText]}>
               {t('settings.userSettings')}
             </Text>
@@ -483,13 +467,13 @@ export default function SettingsScreen() {
               label={t('settings.clearUserSettings')}
               onPress={handleClearUserSettings}
             />
-          </Animated.View>
+          </View>
 
           <Text style={[styles.saveMessage, isRtl && styles.rtlText]}>
             {saveMessage}
           </Text>
 
-          <Animated.View style={[styles.card, entranceAnimatedStyle]}>
+          <View style={styles.card}>
             <Text style={[styles.sectionLabel, isRtl && styles.rtlText]}>
               {t('settings.appInformation')}
             </Text>
@@ -505,11 +489,9 @@ export default function SettingsScreen() {
               label={t('nav.privacyPolicy')}
               onPress={handlePrivacyPolicyPress}
             />
-          </Animated.View>
+          </View>
 
-          <Animated.View
-            style={[styles.card, styles.donationCard, entranceAnimatedStyle]}
-          >
+          <View style={[styles.card, styles.donationCard]}>
             <Image
               source={require('../assets/kofi_logo.png')}
               resizeMode="contain"
@@ -540,8 +522,9 @@ export default function SettingsScreen() {
             <Text style={[styles.supportFooter, isRtl && styles.rtlText]}>
               {t('support.footer')}
             </Text>
-          </Animated.View>
-        </ScrollView>
+          </View>
+          </ScrollView>
+        </AnimatedScreenContent>
       </SafeAreaView>
     </ScreenBackground>
   );

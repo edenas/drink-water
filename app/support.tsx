@@ -1,16 +1,16 @@
-import { router, useFocusEffect } from 'expo-router';
-import { useCallback, useRef } from 'react';
+import { router } from 'expo-router';
 import {
-  Animated,
   Image,
   Linking,
   Pressable,
   ScrollView,
   StyleSheet,
   Text,
+  View,
 } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 
+import AnimatedScreenContent from '@/components/AnimatedScreenContent';
 import ScreenBackground from '@/components/ScreenBackground';
 import { appButtonStyles } from '@/constants/buttonStyles';
 import { useI18n } from '@/logic/i18n';
@@ -50,39 +50,9 @@ function SupportButton({
 
 export default function SupportScreen() {
   const { isRtl, t } = useI18n();
-  const entranceAnimation = useRef(new Animated.Value(0)).current;
 
   const handleBackPress = () => {
     router.replace('/settings');
-  };
-
-  useFocusEffect(
-    useCallback(() => {
-      entranceAnimation.setValue(0);
-      Animated.timing(entranceAnimation, {
-        toValue: 1,
-        duration: 420,
-        useNativeDriver: true,
-      }).start();
-    }, [entranceAnimation])
-  );
-
-  const entranceAnimatedStyle = {
-    opacity: entranceAnimation,
-    transform: [
-      {
-        translateY: entranceAnimation.interpolate({
-          inputRange: [0, 1],
-          outputRange: [10, 0],
-        }),
-      },
-      {
-        scale: entranceAnimation.interpolate({
-          inputRange: [0, 1],
-          outputRange: [0.97, 1],
-        }),
-      },
-    ],
   };
 
   const openKofi = () => {
@@ -92,14 +62,15 @@ export default function SupportScreen() {
   return (
     <ScreenBackground>
       <SafeAreaView style={styles.container}>
-        <ScrollView contentContainerStyle={styles.content}>
-          <SupportButton
-            label={t('back')}
-            onPress={handleBackPress}
-            variant="secondary"
-          />
+        <AnimatedScreenContent>
+          <ScrollView contentContainerStyle={styles.content}>
+            <SupportButton
+              label={t('back')}
+              onPress={handleBackPress}
+              variant="secondary"
+            />
 
-          <Animated.View style={[styles.card, entranceAnimatedStyle]}>
+          <View style={styles.card}>
             <Image
               source={require('../assets/kofi_logo.png')}
               resizeMode="contain"
@@ -131,8 +102,9 @@ export default function SupportScreen() {
             <Text style={[styles.trustText, isRtl && styles.rtlText]}>
               {t('support.footer')}
             </Text>
-          </Animated.View>
-        </ScrollView>
+          </View>
+          </ScrollView>
+        </AnimatedScreenContent>
       </SafeAreaView>
     </ScreenBackground>
   );

@@ -1,7 +1,5 @@
-import { router, useFocusEffect, useLocalSearchParams } from 'expo-router';
-import { useCallback, useRef } from 'react';
+import { router, useLocalSearchParams } from 'expo-router';
 import {
-  Animated,
   Pressable,
   ScrollView,
   StyleSheet,
@@ -10,6 +8,7 @@ import {
 } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 
+import AnimatedScreenContent from '@/components/AnimatedScreenContent';
 import ScreenBackground from '@/components/ScreenBackground';
 import { appButtonStyles } from '@/constants/buttonStyles';
 import { useI18n } from '@/logic/i18n';
@@ -53,7 +52,6 @@ function InfoButton({ label, onPress }: { label: string; onPress: () => void }) 
 export default function HowToUseScreen() {
   const { isRtl, t } = useI18n();
   const { source } = useLocalSearchParams<{ source?: string }>();
-  const entranceAnimation = useRef(new Animated.Value(0)).current;
 
   const handleBackPress = () => {
     if (source === 'firstLaunch') {
@@ -67,42 +65,14 @@ export default function HowToUseScreen() {
     router.replace('/settings');
   };
 
-  useFocusEffect(
-    useCallback(() => {
-      entranceAnimation.setValue(0);
-      Animated.timing(entranceAnimation, {
-        toValue: 1,
-        duration: 420,
-        useNativeDriver: true,
-      }).start();
-    }, [entranceAnimation])
-  );
-
-  const entranceAnimatedStyle = {
-    opacity: entranceAnimation,
-    transform: [
-      {
-        translateY: entranceAnimation.interpolate({
-          inputRange: [0, 1],
-          outputRange: [10, 0],
-        }),
-      },
-      {
-        scale: entranceAnimation.interpolate({
-          inputRange: [0, 1],
-          outputRange: [0.97, 1],
-        }),
-      },
-    ],
-  };
-
   return (
     <ScreenBackground>
       <SafeAreaView style={styles.container}>
-        <ScrollView contentContainerStyle={styles.content}>
-          <InfoButton label={t('back')} onPress={handleBackPress} />
+        <AnimatedScreenContent>
+          <ScrollView contentContainerStyle={styles.content}>
+            <InfoButton label={t('back')} onPress={handleBackPress} />
 
-          <Animated.View style={[styles.card, entranceAnimatedStyle]}>
+          <View style={styles.card}>
             <Text style={[styles.title, isRtl && styles.rtlText]}>
               {t('how.title')}
             </Text>
@@ -122,8 +92,9 @@ export default function HowToUseScreen() {
                 </View>
               ))}
             </View>
-          </Animated.View>
-        </ScrollView>
+          </View>
+          </ScrollView>
+        </AnimatedScreenContent>
       </SafeAreaView>
     </ScreenBackground>
   );

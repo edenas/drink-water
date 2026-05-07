@@ -25,7 +25,9 @@ import Svg, {
 } from 'react-native-svg';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 
+import AnimatedScreenContent from '@/components/AnimatedScreenContent';
 import ScreenBackground from '@/components/ScreenBackground';
+import ScreenLoading from '@/components/ScreenLoading';
 import WaterBackgroundAnimation, {
   WaterBackgroundAnimationRef,
 } from '@/components/WaterBackgroundAnimation';
@@ -88,75 +90,92 @@ export default function HomeScreen() {
   const waterStepAmountRef = useRef(defaultWaterStepAmount);
   const panStartWaterStepAmountRef = useRef(defaultWaterStepAmount);
   const notificationToggleAnimation = useRef(new Animated.Value(0)).current;
-  const entranceAnimation = useRef(new Animated.Value(0)).current;
   const waterAnimationRef = useRef<WaterBackgroundAnimationRef>(null);
 
   const getTodayDate = () => new Date().toISOString().split('T')[0];
 
   const loadSavedValues = useCallback(async () => {
-    const today = getTodayDate();
-    const savedLastSavedDate = await AsyncStorage.getItem(
-      lastSavedDateStorageKey
-    );
-    const savedWaterAmount = await AsyncStorage.getItem(waterAmountStorageKey);
-    const savedAllTimeWaterAmount = await AsyncStorage.getItem(
-      allTimeWaterAmountStorageKey
-    );
-    const savedWaterHistory = await AsyncStorage.getItem(
-      waterHistoryStorageKey
-    );
-    const savedHourlyWaterHistory = await AsyncStorage.getItem(
-      hourlyWaterHistoryStorageKey
-    );
-    const savedWeight = await AsyncStorage.getItem(weightStorageKey);
-    const savedAge = await AsyncStorage.getItem(ageStorageKey);
-    const savedGender = await AsyncStorage.getItem(genderStorageKey);
-    const savedActivityLevel = await AsyncStorage.getItem(
-      activityLevelStorageKey
-    );
-    const savedNotificationsEnabled = await AsyncStorage.getItem(
-      notificationsEnabledStorageKey
-    );
+    try {
+      const today = getTodayDate();
+      const savedLastSavedDate = await AsyncStorage.getItem(
+        lastSavedDateStorageKey
+      );
+      const savedWaterAmount = await AsyncStorage.getItem(waterAmountStorageKey);
+      const savedAllTimeWaterAmount = await AsyncStorage.getItem(
+        allTimeWaterAmountStorageKey
+      );
+      const savedWaterHistory = await AsyncStorage.getItem(
+        waterHistoryStorageKey
+      );
+      const savedHourlyWaterHistory = await AsyncStorage.getItem(
+        hourlyWaterHistoryStorageKey
+      );
+      const savedWeight = await AsyncStorage.getItem(weightStorageKey);
+      const savedAge = await AsyncStorage.getItem(ageStorageKey);
+      const savedGender = await AsyncStorage.getItem(genderStorageKey);
+      const savedActivityLevel = await AsyncStorage.getItem(
+        activityLevelStorageKey
+      );
+      const savedNotificationsEnabled = await AsyncStorage.getItem(
+        notificationsEnabledStorageKey
+      );
 
-    setLastSavedDate(savedLastSavedDate);
-    setNotificationsEnabled(savedNotificationsEnabled === 'true');
+      setLastSavedDate(savedLastSavedDate);
+      setNotificationsEnabled(savedNotificationsEnabled === 'true');
 
-    if (savedLastSavedDate !== today) {
-      setWaterAmount(0);
-    } else {
-      setWaterAmount(savedWaterAmount !== null ? Number(savedWaterAmount) : 0);
+      if (savedLastSavedDate !== today) {
+        setWaterAmount(0);
+      } else {
+        setWaterAmount(savedWaterAmount !== null ? Number(savedWaterAmount) : 0);
+      }
+
+      setAllTimeWaterAmount(
+        savedAllTimeWaterAmount !== null ? Number(savedAllTimeWaterAmount) : 0
+      );
+      setWaterHistory(
+        savedWaterHistory !== null ? JSON.parse(savedWaterHistory) : {}
+      );
+      setHourlyWaterHistory(
+        savedHourlyWaterHistory !== null
+          ? JSON.parse(savedHourlyWaterHistory)
+          : {}
+      );
+
+      setWaterStepAmount(defaultWaterStepAmount);
+      setWaterStepControlAmount(defaultWaterStepAmount);
+
+      setDailyGoal(
+        calculateDailyWaterGoal(
+          savedWeight,
+          savedGender,
+          savedActivityLevel,
+          savedAge
+        )
+      );
+    } catch {
+      setWaterStepAmount(defaultWaterStepAmount);
+      setWaterStepControlAmount(defaultWaterStepAmount);
+      setDailyGoal(defaultDailyGoal);
+    } finally {
+      setHasLoadedStorage(true);
     }
-
-    setAllTimeWaterAmount(
-      savedAllTimeWaterAmount !== null ? Number(savedAllTimeWaterAmount) : 0
-    );
-    setWaterHistory(
-      savedWaterHistory !== null ? JSON.parse(savedWaterHistory) : {}
-    );
-    setHourlyWaterHistory(
-      savedHourlyWaterHistory !== null
-        ? JSON.parse(savedHourlyWaterHistory)
-        : {}
-    );
-
-    setWaterStepAmount(defaultWaterStepAmount);
-    setWaterStepControlAmount(defaultWaterStepAmount);
-
-    setDailyGoal(
-      calculateDailyWaterGoal(
-        savedWeight,
-        savedGender,
-        savedActivityLevel,
-        savedAge
-      )
-    );
-
-    setHasLoadedStorage(true);
   }, []);
 
   useEffect(() => {
+    const readyFallbackTimer = setTimeout(() => {
+      setHasLoadedStorage(true);
+    }, 1800);
+
     loadSavedValues();
+
+    return () => clearTimeout(readyFallbackTimer);
   }, [loadSavedValues]);
+
+  useFocusEffect(
+    useCallback(() => {
+      loadSavedValues();
+    }, [loadSavedValues])
+  );
 
   useEffect(() => {
     waterStepAmountRef.current = waterStepAmount;
@@ -167,18 +186,6 @@ export default function HomeScreen() {
       setWaterStepAmountInput(String(waterStepAmount));
     }
   }, [isEditingWaterStepAmount, waterStepAmount]);
-
-  useFocusEffect(
-    useCallback(() => {
-      loadSavedValues();
-      entranceAnimation.setValue(0);
-      Animated.timing(entranceAnimation, {
-        toValue: 1,
-        duration: 420,
-        useNativeDriver: true,
-      }).start();
-    }, [entranceAnimation, loadSavedValues])
-  );
 
   useEffect(() => {
     if (!hasLoadedStorage) {
@@ -413,24 +420,6 @@ export default function HomeScreen() {
     }).start();
   }, [notificationToggleAnimation, notificationsEnabled]);
 
-  const entranceAnimatedStyle = {
-    opacity: entranceAnimation,
-    transform: [
-      {
-        translateY: entranceAnimation.interpolate({
-          inputRange: [0, 1],
-          outputRange: [10, 0],
-        }),
-      },
-      {
-        scale: entranceAnimation.interpolate({
-          inputRange: [0, 1],
-          outputRange: [0.97, 1],
-        }),
-      },
-    ],
-  };
-
   const addWater = () => {
     const today = getTodayDate();
     const currentHour = String(new Date().getHours());
@@ -453,6 +442,10 @@ export default function HomeScreen() {
     });
   };
 
+  if (!hasLoadedStorage) {
+    return <ScreenLoading />;
+  }
+
   return (
     <ScreenBackground
       style={styles.container}
@@ -462,22 +455,22 @@ export default function HomeScreen() {
       }}
     >
       <WaterBackgroundAnimation ref={waterAnimationRef} />
-      <ScrollView
-        showsVerticalScrollIndicator={false}
-        style={styles.scroll}
-        contentContainerStyle={[
-          styles.content,
-          {
-            paddingTop: topContentInset,
-            paddingBottom: bottomContentInset,
-          },
-        ]}
-      >
+      <AnimatedScreenContent style={styles.animatedContent}>
+        <ScrollView
+          showsVerticalScrollIndicator={false}
+          style={styles.scroll}
+          contentContainerStyle={[
+            styles.content,
+            {
+              paddingTop: topContentInset,
+              paddingBottom: bottomContentInset,
+            },
+          ]}
+        >
         <Animated.View
           style={[
             styles.notificationToggle,
             isRtl && styles.rtlRow,
-            entranceAnimatedStyle,
           ]}
         >
           <Text
@@ -523,9 +516,7 @@ export default function HomeScreen() {
           </View>
         </Animated.View>
 
-        <Animated.View
-          style={[styles.card, styles.todayCard, entranceAnimatedStyle]}
-        >
+        <Animated.View style={[styles.card, styles.todayCard]}>
           <Text style={styles.title}>{t('home.today')}</Text>
 
           <View style={styles.progressCircleWrapper}>
@@ -656,9 +647,7 @@ export default function HomeScreen() {
           </Text>
         </Animated.View>
 
-        <Animated.View
-          style={[styles.card, styles.addWaterCard, entranceAnimatedStyle]}
-        >
+        <Animated.View style={[styles.card, styles.addWaterCard]}>
           <Text style={styles.addWaterTitle}>{t('home.addWater')}</Text>
 
           <View style={styles.selectedAmountInputRow}>
@@ -718,7 +707,8 @@ export default function HomeScreen() {
             />
           </View>
         </Animated.View>
-      </ScrollView>
+        </ScrollView>
+      </AnimatedScreenContent>
     </ScreenBackground>
   );
 }
@@ -728,6 +718,9 @@ const styles = StyleSheet.create({
     flex: 1,
     alignItems: 'center',
     paddingHorizontal: 18,
+  },
+  animatedContent: {
+    width: '100%',
   },
   notificationToggle: {
     alignSelf: 'flex-end',

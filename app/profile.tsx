@@ -1,8 +1,7 @@
 import AsyncStorage from '@react-native-async-storage/async-storage';
 import { useFocusEffect } from 'expo-router';
-import { useCallback, useEffect, useRef, useState } from 'react';
+import { useCallback, useRef, useState } from 'react';
 import {
-  Animated,
   Keyboard,
   Platform,
   ScrollView,
@@ -15,7 +14,9 @@ import {
 } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 
+import AnimatedScreenContent from '@/components/AnimatedScreenContent';
 import ScreenBackground from '@/components/ScreenBackground';
+import ScreenLoading from '@/components/ScreenLoading';
 import WaterBackgroundAnimation, {
   WaterBackgroundAnimationRef,
 } from '@/components/WaterBackgroundAnimation';
@@ -35,61 +36,50 @@ export default function ProfileScreen() {
   const [activityLevel, setActivityLevel] = useState<string | null>(null);
   const [saveMessage, setSaveMessage] = useState('');
   const [hasSavedSettings, setHasSavedSettings] = useState(false);
-  const entranceAnimation = useRef(new Animated.Value(0)).current;
+  const [hasLoadedSettings, setHasLoadedSettings] = useState(false);
   const waterAnimationRef = useRef<WaterBackgroundAnimationRef>(null);
 
   useFocusEffect(
     useCallback(() => {
       const loadSettings = async () => {
-        const savedWeight = await AsyncStorage.getItem(weightStorageKey);
-        const savedAge = await AsyncStorage.getItem(ageStorageKey);
-        const savedGender = await AsyncStorage.getItem(genderStorageKey);
-        const savedActivityLevel = await AsyncStorage.getItem(
-          activityLevelStorageKey
-        );
+        try {
+          const savedWeight = await AsyncStorage.getItem(weightStorageKey);
+          const savedAge = await AsyncStorage.getItem(ageStorageKey);
+          const savedGender = await AsyncStorage.getItem(genderStorageKey);
+          const savedActivityLevel = await AsyncStorage.getItem(
+            activityLevelStorageKey
+          );
 
-        setHasSavedSettings(
-          savedWeight !== null ||
-            savedAge !== null ||
-            savedGender !== null ||
-            savedActivityLevel !== null
-        );
-        setWeight(savedWeight ?? '');
-        setAge(savedAge ?? '');
-        setGender(savedGender);
-        setActivityLevel(savedActivityLevel);
+          setHasSavedSettings(
+            savedWeight !== null ||
+              savedAge !== null ||
+              savedGender !== null ||
+              savedActivityLevel !== null
+          );
+          setWeight(savedWeight ?? '');
+          setAge(savedAge ?? '');
+          setGender(savedGender);
+          setActivityLevel(savedActivityLevel);
+        } catch {
+          setHasSavedSettings(false);
+          setWeight('');
+          setAge('');
+          setGender(null);
+          setActivityLevel(null);
+        } finally {
+          setHasLoadedSettings(true);
+        }
       };
 
+      const readyFallbackTimer = setTimeout(() => {
+        setHasLoadedSettings(true);
+      }, 1800);
+
       loadSettings();
+
+      return () => clearTimeout(readyFallbackTimer);
     }, [])
   );
-
-  useEffect(() => {
-    entranceAnimation.setValue(0);
-    Animated.timing(entranceAnimation, {
-      toValue: 1,
-      duration: 420,
-      useNativeDriver: true,
-    }).start();
-  }, [entranceAnimation]);
-
-  const entranceAnimatedStyle = {
-    opacity: entranceAnimation,
-    transform: [
-      {
-        translateY: entranceAnimation.interpolate({
-          inputRange: [0, 1],
-          outputRange: [10, 0],
-        }),
-      },
-      {
-        scale: entranceAnimation.interpolate({
-          inputRange: [0, 1],
-          outputRange: [0.97, 1],
-        }),
-      },
-    ],
-  };
 
   const handleSave = async () => {
     waterAnimationRef.current?.trigger();
@@ -119,19 +109,24 @@ export default function ProfileScreen() {
     setActivityLevel(value);
   };
 
+  if (!hasLoadedSettings) {
+    return <ScreenLoading />;
+  }
+
   const profileContent = (
     <ScreenBackground>
       <WaterBackgroundAnimation ref={waterAnimationRef} />
       <SafeAreaView style={styles.container}>
-        <ScrollView
-          contentContainerStyle={styles.content}
-          keyboardShouldPersistTaps="handled"
-        >
-          <Text style={[styles.title, isRtl && styles.rtlText]}>
-            {t('profile.title')}
-          </Text>
+        <AnimatedScreenContent>
+          <ScrollView
+            contentContainerStyle={styles.content}
+            keyboardShouldPersistTaps="handled"
+          >
+            <Text style={[styles.title, isRtl && styles.rtlText]}>
+              {t('profile.title')}
+            </Text>
 
-          <Animated.View style={[styles.card, entranceAnimatedStyle]}>
+            <View style={styles.card}>
             <Text style={[styles.label, isRtl && styles.rtlText]}>
               {t('profile.weight')}
             </Text>
@@ -265,8 +260,9 @@ export default function ProfileScreen() {
             <Text style={[styles.saveMessage, isRtl && styles.rtlText]}>
               {saveMessage}
             </Text>
-          </Animated.View>
-        </ScrollView>
+            </View>
+          </ScrollView>
+        </AnimatedScreenContent>
       </SafeAreaView>
     </ScreenBackground>
   );

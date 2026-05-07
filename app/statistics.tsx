@@ -1,20 +1,21 @@
 import AsyncStorage from '@react-native-async-storage/async-storage';
 import { useFocusEffect } from 'expo-router';
-import { useCallback, useRef, useState } from 'react';
+import { useCallback, useState } from 'react';
 import {
-  ActivityIndicator,
-  Animated,
   InteractionManager,
   LayoutChangeEvent,
   ScrollView,
   StyleSheet,
   Text,
+  View,
   useWindowDimensions,
 } from 'react-native';
 import { BarChart } from 'react-native-chart-kit';
 import { SafeAreaView } from 'react-native-safe-area-context';
 
+import AnimatedScreenContent from '@/components/AnimatedScreenContent';
 import ScreenBackground from '@/components/ScreenBackground';
+import ScreenLoading from '@/components/ScreenLoading';
 import { useI18n } from '@/logic/i18n';
 
 const waterHistoryStorageKey = 'waterHistory';
@@ -160,7 +161,6 @@ const sumMatchingDates = (
 export default function StatisticsScreen() {
   const { isRtl, t } = useI18n();
   const { width } = useWindowDimensions();
-  const chartCardsAnimation = useRef(new Animated.Value(0)).current;
   const [containerWidth, setContainerWidth] = useState(0);
   const [chartRenderKey, setChartRenderKey] = useState(0);
   const [hasLoadedWaterData, setHasLoadedWaterData] = useState(false);
@@ -196,65 +196,98 @@ export default function StatisticsScreen() {
   });
 
   const loadWaterData = useCallback(async () => {
-    const savedWaterHistory = await AsyncStorage.getItem(
-      waterHistoryStorageKey
-    );
-    const savedHourlyWaterHistory = await AsyncStorage.getItem(
-      hourlyWaterHistoryStorageKey
-    );
-    const savedAllTimeWaterAmount = await AsyncStorage.getItem(
-      allTimeWaterAmountStorageKey
-    );
-    const waterHistory: Record<string, number> =
-      savedWaterHistory !== null ? JSON.parse(savedWaterHistory) : {};
-    const hourlyWaterHistory: Record<string, Record<string, number>> =
-      savedHourlyWaterHistory !== null
-        ? JSON.parse(savedHourlyWaterHistory)
-        : {};
-    const today = getDateKey(new Date());
-    const todayHourlyHistory = hourlyWaterHistory[today] || {};
-    const weekDates = getCurrentWeekDateKeys();
-    const currentMonth = today.slice(0, 7);
-    const currentYear = today.slice(0, 4);
-    const yearlyChartMonths = getCurrentYearMonthKeys(currentYear);
-    const historyValues = Object.values(waterHistory);
-    const allTimeFromHistory = historyValues.reduce(
-      (total, amount) => total + amount,
-      0
-    );
+    try {
+      const savedWaterHistory = await AsyncStorage.getItem(
+        waterHistoryStorageKey
+      );
+      const savedHourlyWaterHistory = await AsyncStorage.getItem(
+        hourlyWaterHistoryStorageKey
+      );
+      const savedAllTimeWaterAmount = await AsyncStorage.getItem(
+        allTimeWaterAmountStorageKey
+      );
+      const waterHistory: Record<string, number> =
+        savedWaterHistory !== null ? JSON.parse(savedWaterHistory) : {};
+      const hourlyWaterHistory: Record<string, Record<string, number>> =
+        savedHourlyWaterHistory !== null
+          ? JSON.parse(savedHourlyWaterHistory)
+          : {};
+      const today = getDateKey(new Date());
+      const todayHourlyHistory = hourlyWaterHistory[today] || {};
+      const weekDates = getCurrentWeekDateKeys();
+      const currentMonth = today.slice(0, 7);
+      const currentYear = today.slice(0, 4);
+      const yearlyChartMonths = getCurrentYearMonthKeys(currentYear);
+      const historyValues = Object.values(waterHistory);
+      const allTimeFromHistory = historyValues.reduce(
+        (total, amount) => total + amount,
+        0
+      );
 
-    setStats({
-      today: waterHistory[today] || 0,
-      week: sumDates(waterHistory, weekDates),
-      month: sumMatchingDates(waterHistory, currentMonth),
-      year: sumMatchingDates(waterHistory, currentYear),
-      allTime:
-        allTimeFromHistory ||
-        (savedAllTimeWaterAmount !== null
-          ? Number(savedAllTimeWaterAmount)
-          : 0),
-    });
-    setWeeklyChart({
-      labels: getWeekLabels(t),
-      values: weekDates.map((date) =>
-        Number(((waterHistory[date] || 0) / 1000).toFixed(2))
-      ),
-    });
-    setTodayChart({
-      labels: getHourLabels(),
-      values: Array.from({ length: 24 }, (_, hour) =>
-        Number(((todayHourlyHistory[String(hour)] || 0) / 1000).toFixed(2))
-      ),
-    });
-    setYearlyChart({
-      labels: getMonthLabels(t),
-      values: yearlyChartMonths.map((month) =>
-        Number((sumMatchingDates(waterHistory, month) / 1000).toFixed(2))
-      ),
-    });
-    setMonthlyChart(getCurrentMonthChartData(waterHistory));
-    setAllTimeChart(getLatestYearChartData(waterHistory));
-    setHasLoadedWaterData(true);
+      setStats({
+        today: waterHistory[today] || 0,
+        week: sumDates(waterHistory, weekDates),
+        month: sumMatchingDates(waterHistory, currentMonth),
+        year: sumMatchingDates(waterHistory, currentYear),
+        allTime:
+          allTimeFromHistory ||
+          (savedAllTimeWaterAmount !== null
+            ? Number(savedAllTimeWaterAmount)
+            : 0),
+      });
+      setWeeklyChart({
+        labels: getWeekLabels(t),
+        values: weekDates.map((date) =>
+          Number(((waterHistory[date] || 0) / 1000).toFixed(2))
+        ),
+      });
+      setTodayChart({
+        labels: getHourLabels(),
+        values: Array.from({ length: 24 }, (_, hour) =>
+          Number(((todayHourlyHistory[String(hour)] || 0) / 1000).toFixed(2))
+        ),
+      });
+      setYearlyChart({
+        labels: getMonthLabels(t),
+        values: yearlyChartMonths.map((month) =>
+          Number((sumMatchingDates(waterHistory, month) / 1000).toFixed(2))
+        ),
+      });
+      setMonthlyChart(getCurrentMonthChartData(waterHistory));
+      setAllTimeChart(getLatestYearChartData(waterHistory));
+    } catch {
+      setStats({
+        today: 0,
+        week: 0,
+        month: 0,
+        year: 0,
+        allTime: 0,
+      });
+      setWeeklyChart({
+        labels: getWeekLabels(t),
+        values: Array(7).fill(0),
+      });
+      setTodayChart({
+        labels: getHourLabels(),
+        values: Array(24).fill(0),
+      });
+      setYearlyChart({
+        labels: getMonthLabels(t),
+        values: Array(12).fill(0),
+      });
+      setMonthlyChart({
+        labels: getCurrentMonthDateKeys().map((date) =>
+          String(Number(date.slice(8, 10)))
+        ),
+        values: Array(getCurrentMonthDateKeys().length).fill(0),
+      });
+      setAllTimeChart({
+        labels: [],
+        values: [],
+      });
+    } finally {
+      setHasLoadedWaterData(true);
+    }
   }, [t]);
 
   const handleContainerLayout = useCallback((event: LayoutChangeEvent) => {
@@ -269,18 +302,22 @@ export default function StatisticsScreen() {
     useCallback(() => {
       let isActive = true;
       let animationFrame: ReturnType<typeof requestAnimationFrame> | undefined;
+      const readyFallbackTimer = setTimeout(() => {
+        if (isActive) {
+          setHasLoadedWaterData(true);
+          setIsScreenReady(true);
+          setChartRenderKey((currentKey) => currentKey + 1);
+        }
+      }, 900);
+
+      setHasLoadedWaterData(false);
       loadWaterData();
       setIsScreenReady(false);
-      chartCardsAnimation.setValue(0);
-      Animated.timing(chartCardsAnimation, {
-        toValue: 1,
-        duration: 420,
-        useNativeDriver: true,
-      }).start();
 
       const interactionTask = InteractionManager.runAfterInteractions(() => {
         animationFrame = requestAnimationFrame(() => {
           if (isActive) {
+            clearTimeout(readyFallbackTimer);
             setChartRenderKey((currentKey) => currentKey + 1);
             setIsScreenReady(true);
           }
@@ -289,13 +326,14 @@ export default function StatisticsScreen() {
 
       return () => {
         isActive = false;
+        clearTimeout(readyFallbackTimer);
         interactionTask.cancel();
 
         if (animationFrame !== undefined) {
           cancelAnimationFrame(animationFrame);
         }
       };
-    }, [chartCardsAnimation, loadWaterData])
+    }, [loadWaterData])
   );
 
   const literUnit = t('unit.liter');
@@ -323,50 +361,26 @@ export default function StatisticsScreen() {
   const isYearlyChartScrollable = yearlyChartWidth > chartVisibleWidth;
   const isAllTimeChartScrollable =
     allTimeChart.labels.length > 5 && allTimeChartWidth > chartVisibleWidth;
-  const animatedCardStyle = {
-    opacity: chartCardsAnimation,
-    transform: [
-      {
-        translateY: chartCardsAnimation.interpolate({
-          inputRange: [0, 1],
-          outputRange: [10, 0],
-        }),
-      },
-      {
-        scale: chartCardsAnimation.interpolate({
-          inputRange: [0, 1],
-          outputRange: [0.97, 1],
-        }),
-      },
-    ],
-  };
-
   return (
     <ScreenBackground>
       <SafeAreaView style={styles.container} onLayout={handleContainerLayout}>
         {!canRenderCharts ? (
-          <Animated.View style={[styles.loadingContent, animatedCardStyle]}>
-            <ActivityIndicator color="#00AEEF" size="small" />
-            <Text style={[styles.loadingText, isRtl && styles.rtlText]}>
-              {t('statistics.loading')}
-            </Text>
-          </Animated.View>
+          <ScreenLoading />
         ) : (
+          <AnimatedScreenContent>
           <ScrollView contentContainerStyle={styles.content}>
             <Text style={[styles.title, isRtl && styles.rtlText]}>
               {t('statistics.title')}
             </Text>
 
-            <Animated.View
-              style={[styles.statRow, isRtl && styles.rtlRow, animatedCardStyle]}
-            >
+            <View style={[styles.statRow, isRtl && styles.rtlRow]}>
               <Text style={[styles.statLabel, isRtl && styles.rtlText]}>
                 {t('statistics.today')}
               </Text>
               <Text style={styles.statValue}>{formatLiters(stats.today)}</Text>
-            </Animated.View>
+            </View>
 
-            <Animated.View style={[styles.chartCard, animatedCardStyle]}>
+            <View style={styles.chartCard}>
               <ScrollView
                 horizontal
                 contentContainerStyle={styles.chartScrollContent}
@@ -391,18 +405,16 @@ export default function StatisticsScreen() {
               {isHourlyChartScrollable && (
                 <ChartSwipeHint label={t('statistics.swipe')} />
               )}
-            </Animated.View>
+            </View>
 
-            <Animated.View
-              style={[styles.statRow, isRtl && styles.rtlRow, animatedCardStyle]}
-            >
+            <View style={[styles.statRow, isRtl && styles.rtlRow]}>
               <Text style={[styles.statLabel, isRtl && styles.rtlText]}>
                 {t('statistics.thisWeek')}
               </Text>
               <Text style={styles.statValue}>{formatLiters(stats.week)}</Text>
-            </Animated.View>
+            </View>
 
-            <Animated.View style={[styles.chartCard, animatedCardStyle]}>
+            <View style={styles.chartCard}>
               <ScrollView
                 horizontal
                 contentContainerStyle={styles.chartScrollContent}
@@ -427,18 +439,16 @@ export default function StatisticsScreen() {
               {isWeeklyChartScrollable && (
                 <ChartSwipeHint label={t('statistics.swipe')} />
               )}
-            </Animated.View>
+            </View>
 
-            <Animated.View
-              style={[styles.statRow, isRtl && styles.rtlRow, animatedCardStyle]}
-            >
+            <View style={[styles.statRow, isRtl && styles.rtlRow]}>
               <Text style={[styles.statLabel, isRtl && styles.rtlText]}>
                 {t('statistics.thisMonth')}
               </Text>
               <Text style={styles.statValue}>{formatLiters(stats.month)}</Text>
-            </Animated.View>
+            </View>
 
-            <Animated.View style={[styles.chartCard, animatedCardStyle]}>
+            <View style={styles.chartCard}>
               <ScrollView
                 horizontal
                 contentContainerStyle={styles.chartScrollContent}
@@ -463,18 +473,16 @@ export default function StatisticsScreen() {
               {isMonthlyChartScrollable && (
                 <ChartSwipeHint label={t('statistics.swipe')} />
               )}
-            </Animated.View>
+            </View>
 
-            <Animated.View
-              style={[styles.statRow, isRtl && styles.rtlRow, animatedCardStyle]}
-            >
+            <View style={[styles.statRow, isRtl && styles.rtlRow]}>
               <Text style={[styles.statLabel, isRtl && styles.rtlText]}>
                 {t('statistics.thisYear')}
               </Text>
               <Text style={styles.statValue}>{formatLiters(stats.year)}</Text>
-            </Animated.View>
+            </View>
 
-            <Animated.View style={[styles.chartCard, animatedCardStyle]}>
+            <View style={styles.chartCard}>
               <ScrollView
                 horizontal
                 contentContainerStyle={styles.chartScrollContent}
@@ -499,21 +507,19 @@ export default function StatisticsScreen() {
               {isYearlyChartScrollable && (
                 <ChartSwipeHint label={t('statistics.swipe')} />
               )}
-            </Animated.View>
+            </View>
 
-            <Animated.View
-              style={[styles.statRow, isRtl && styles.rtlRow, animatedCardStyle]}
-            >
+            <View style={[styles.statRow, isRtl && styles.rtlRow]}>
               <Text style={[styles.statLabel, isRtl && styles.rtlText]}>
                 {t('statistics.allTime')}
               </Text>
               <Text style={styles.statValue}>
                 {formatLiters(stats.allTime)}
               </Text>
-            </Animated.View>
+            </View>
 
             {allTimeChart.labels.length > 0 && (
-              <Animated.View style={[styles.chartCard, animatedCardStyle]}>
+              <View style={styles.chartCard}>
                 {isAllTimeChartScrollable ? (
                   <ScrollView
                     horizontal
@@ -553,9 +559,10 @@ export default function StatisticsScreen() {
                     style={styles.chart}
                   />
                 )}
-              </Animated.View>
+              </View>
             )}
           </ScrollView>
+          </AnimatedScreenContent>
         )}
       </SafeAreaView>
     </ScreenBackground>
@@ -569,18 +576,6 @@ const styles = StyleSheet.create({
   content: {
     padding: 20,
     paddingBottom: 80,
-  },
-  loadingContent: {
-    alignItems: 'center',
-    flex: 1,
-    justifyContent: 'center',
-    padding: 20,
-  },
-  loadingText: {
-    color: '#24566A',
-    fontSize: 15,
-    fontWeight: '600',
-    marginTop: 12,
   },
   title: {
     color: '#173B4A',

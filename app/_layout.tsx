@@ -3,7 +3,6 @@ import { Ionicons } from '@expo/vector-icons';
 import { router, Tabs, useSegments } from 'expo-router';
 import { useEffect, useState } from 'react';
 import {
-  ActivityIndicator,
   Animated,
   Easing,
   Platform,
@@ -17,6 +16,7 @@ import {
   useSafeAreaInsets,
 } from 'react-native-safe-area-context';
 
+import ScreenLoading from '@/components/ScreenLoading';
 import ScreenBackground from '@/components/ScreenBackground';
 import { getNotificationsModule } from '@/logic/notifications';
 import {
@@ -56,7 +56,6 @@ function TabsLayout() {
   const [hasAcceptedTerms, setHasAcceptedTerms] = useState(false);
   const [hasCheckedTerms, setHasCheckedTerms] = useState(false);
   const splashOpacity = useState(() => new Animated.Value(1))[0];
-  const appOpacity = useState(() => new Animated.Value(0))[0];
 
   useEffect(() => {
     const checkTermsAcceptance = async () => {
@@ -79,16 +78,11 @@ function TabsLayout() {
         useNativeDriver: true,
       }).start(() => {
         setStartupPhase('app');
-        Animated.timing(appOpacity, {
-          toValue: 1,
-          duration: 260,
-          useNativeDriver: true,
-        }).start();
       });
     }, 1300);
 
     return () => clearTimeout(startupTimer);
-  }, [appOpacity, splashOpacity]);
+  }, [splashOpacity]);
 
   useEffect(() => {
     if (startupPhase !== 'app' || !hasCheckedTerms) {
@@ -115,32 +109,30 @@ function TabsLayout() {
     }
   }, [hasAcceptedTerms, hasCheckedTerms, segments, startupPhase]);
 
-  if (startupPhase === 'splash' || !hasCheckedTerms || !hasLoadedLanguage) {
+  if (startupPhase === 'splash') {
     return (
       <Animated.View style={[styles.screen, { opacity: splashOpacity }]}>
-        <ScreenBackground style={styles.splashContainer}>
-          <View style={styles.splashContent}>
-            <Text style={styles.splashTitle}>Drink{'\n'}Water</Text>
-            <ActivityIndicator
-              color="#00AEEF"
-              size="small"
-              style={styles.splashSpinner}
-            />
-          </View>
-        </ScreenBackground>
+        <StartupSplash />
       </Animated.View>
     );
+  }
+
+  if (!hasCheckedTerms || !hasLoadedLanguage) {
+    return <ScreenLoading />;
   }
 
   return (
     <TermsAcceptanceContext.Provider
       value={{ hasAcceptedTerms, setHasAcceptedTerms }}
     >
-      <Animated.View style={[styles.screen, { opacity: appOpacity }]}>
+      <View style={styles.screen}>
       <Tabs
+        detachInactiveScreens={false}
         screenOptions={{
           animation: 'shift',
+          freezeOnBlur: false,
           headerShown: false,
+          lazy: false,
           tabBarActiveTintColor: '#00AEEF',
           tabBarInactiveTintColor: '#7D9AAA',
           tabBarShowLabel: false,
@@ -266,8 +258,18 @@ function TabsLayout() {
           }}
         />
       </Tabs>
-      </Animated.View>
+      </View>
     </TermsAcceptanceContext.Provider>
+  );
+}
+
+function StartupSplash() {
+  return (
+    <ScreenBackground style={styles.splashContainer}>
+      <View style={styles.splashContent}>
+        <Text style={styles.splashTitle}>Drink{'\n'}Water</Text>
+      </View>
+    </ScreenBackground>
   );
 }
 
@@ -294,9 +296,6 @@ const styles = StyleSheet.create({
   },
   splashContent: {
     alignItems: 'center',
-  },
-  splashSpinner: {
-    marginTop: 24,
   },
   splashTitle: {
     color: '#00AEEF',
