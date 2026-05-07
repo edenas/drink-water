@@ -31,7 +31,7 @@ function InfoButton({ label, onPress }: { label: string; onPress: () => void }) 
 }
 
 export default function DisclaimerScreen() {
-  const { t } = useI18n();
+  const { isRtl, t } = useI18n();
   const { source } = useLocalSearchParams<{ source?: string }>();
   const entranceAnimation = useRef(new Animated.Value(0)).current;
 
@@ -80,8 +80,12 @@ export default function DisclaimerScreen() {
           <InfoButton label={t('back')} onPress={handleBackPress} />
 
           <Animated.View style={[styles.card, entranceAnimatedStyle]}>
-            <Text style={styles.title}>{t('disclaimer.title')}</Text>
-            <Text style={styles.bodyText}>{t('disclaimer.body')}</Text>
+            <Text style={[styles.title, isRtl && styles.rtlText]}>
+              {t('disclaimer.title')}
+            </Text>
+            <Text style={[styles.bodyText, isRtl && styles.rtlText]}>
+              {t('disclaimer.body')}
+            </Text>
           </Animated.View>
         </ScrollView>
       </SafeAreaView>
@@ -123,6 +127,10 @@ const styles = StyleSheet.create({
     fontSize: 16,
     fontWeight: '500',
     lineHeight: 24,
+  },
+  rtlText: {
+    textAlign: 'right',
+    writingDirection: 'rtl',
   },
   button: {
     ...appButtonStyles.primaryButton,

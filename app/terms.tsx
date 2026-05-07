@@ -30,7 +30,7 @@ const termsLinks: TermsLink[] = [
 ];
 
 export default function TermsScreen() {
-  const { t } = useI18n();
+  const { isRtl, t } = useI18n();
   const { showAgreement: shouldShowAgreementImmediately } =
     useLocalSearchParams<{ showAgreement?: string }>();
   const { setHasAcceptedTerms } = useTermsAcceptance();
@@ -133,18 +133,20 @@ export default function TermsScreen() {
 
           {showAgreement && (
             <Animated.View style={[styles.card, cardAnimatedStyle]}>
-              <Text style={styles.question}>
+              <Text style={[styles.question, isRtl && styles.rtlText]}>
                 {t('terms.question')}
               </Text>
 
-              <View style={styles.linkRow}>
+              <View style={[styles.linkRow, isRtl && styles.rtlRow]}>
                 {termsLinks.map((link) => (
                   <Pressable
                     key={link.pathname}
                     hitSlop={8}
                     onPress={() => handleTermsLinkPress(link.pathname)}
                   >
-                    <Text style={styles.linkText}>{t(link.labelKey)}</Text>
+                    <Text style={[styles.linkText, isRtl && styles.rtlText]}>
+                      {t(link.labelKey)}
+                    </Text>
                   </Pressable>
                 ))}
               </View>
@@ -246,6 +248,12 @@ const styles = StyleSheet.create({
     gap: 14,
     justifyContent: 'center',
     marginTop: 18,
+  },
+  rtlRow: {
+    flexDirection: 'row-reverse',
+  },
+  rtlText: {
+    writingDirection: 'rtl',
   },
   linkText: {
     color: '#007FB1',

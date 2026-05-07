@@ -51,7 +51,7 @@ function InfoButton({ label, onPress }: { label: string; onPress: () => void }) 
 }
 
 export default function HowToUseScreen() {
-  const { t } = useI18n();
+  const { isRtl, t } = useI18n();
   const { source } = useLocalSearchParams<{ source?: string }>();
   const entranceAnimation = useRef(new Animated.Value(0)).current;
 
@@ -103,16 +103,22 @@ export default function HowToUseScreen() {
           <InfoButton label={t('back')} onPress={handleBackPress} />
 
           <Animated.View style={[styles.card, entranceAnimatedStyle]}>
-            <Text style={styles.title}>{t('how.title')}</Text>
-            <Text style={styles.bodyText}>{t('how.body')}</Text>
+            <Text style={[styles.title, isRtl && styles.rtlText]}>
+              {t('how.title')}
+            </Text>
+            <Text style={[styles.bodyText, isRtl && styles.rtlText]}>
+              {t('how.body')}
+            </Text>
 
             <View style={styles.sectionList}>
               {sections.map((section) => (
                 <View key={section.titleKey} style={styles.infoSection}>
-                  <Text style={styles.sectionTitle}>
+                  <Text style={[styles.sectionTitle, isRtl && styles.rtlText]}>
                     {t(section.titleKey)}
                   </Text>
-                  <Text style={styles.sectionText}>{t(section.textKey)}</Text>
+                  <Text style={[styles.sectionText, isRtl && styles.rtlText]}>
+                    {t(section.textKey)}
+                  </Text>
                 </View>
               ))}
             </View>
@@ -181,6 +187,10 @@ const styles = StyleSheet.create({
     fontSize: 15,
     fontWeight: '500',
     lineHeight: 21,
+  },
+  rtlText: {
+    textAlign: 'right',
+    writingDirection: 'rtl',
   },
   button: {
     ...appButtonStyles.primaryButton,

@@ -58,7 +58,7 @@ const progressCircleSize = 206;
 const progressCircleStrokeWidth = 18;
 
 export default function HomeScreen() {
-  const { t } = useI18n();
+  const { isRtl, t } = useI18n();
   const insets = useSafeAreaInsets();
   const topContentInset = Math.max(insets.top * 0.2, 8);
   const bottomContentInset = Math.max(insets.bottom * 0.5, 14);
@@ -370,7 +370,8 @@ export default function HomeScreen() {
       | 'status.low'
       | 'status.medium'
       | 'status.good'
-      | 'status.perfect';
+      | 'status.perfect'
+      | 'status.careful';
   const milliliterUnit = t('unit.ml');
   const circleRadius =
     (progressCircleSize - progressCircleStrokeWidth) / 2;
@@ -473,9 +474,18 @@ export default function HomeScreen() {
         ]}
       >
         <Animated.View
-          style={[styles.notificationToggle, entranceAnimatedStyle]}
+          style={[
+            styles.notificationToggle,
+            isRtl && styles.rtlRow,
+            entranceAnimatedStyle,
+          ]}
         >
-          <Text style={styles.notificationToggleLabel}>
+          <Text
+            style={[
+              styles.notificationToggleLabel,
+              isRtl && styles.rtlReminderLabel,
+            ]}
+          >
             {t('home.waterReminder')}
           </Text>
           <View style={styles.notificationSwitchWrapper}>
@@ -750,6 +760,10 @@ const styles = StyleSheet.create({
     minWidth: 68,
     textAlign: 'right',
   },
+  rtlReminderLabel: {
+    textAlign: 'right',
+    writingDirection: 'rtl',
+  },
   notificationSwitchWrapper: {
     alignItems: 'center',
     justifyContent: 'center',
@@ -1003,5 +1017,8 @@ const styles = StyleSheet.create({
   },
   addWaterButtonText: {
     fontSize: 16,
+  },
+  rtlRow: {
+    flexDirection: 'row-reverse',
   },
 });

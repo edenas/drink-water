@@ -49,7 +49,7 @@ function SupportButton({
 }
 
 export default function SupportScreen() {
-  const { t } = useI18n();
+  const { isRtl, t } = useI18n();
   const entranceAnimation = useRef(new Animated.Value(0)).current;
 
   const handleBackPress = () => {
@@ -105,9 +105,15 @@ export default function SupportScreen() {
               resizeMode="contain"
               style={styles.kofiLogo}
             />
-            <Text style={styles.title}>{t('support.title')}</Text>
-            <Text style={styles.message}>{t('support.message')}</Text>
-            <Text style={styles.smallLine}>{t('support.highlight')}</Text>
+            <Text style={[styles.title, isRtl && styles.rtlText]}>
+              {t('support.title')}
+            </Text>
+            <Text style={[styles.message, isRtl && styles.rtlText]}>
+              {t('support.message')}
+            </Text>
+            <Text style={[styles.smallLine, isRtl && styles.rtlText]}>
+              {t('support.highlight')}
+            </Text>
 
             <Pressable
               style={({ pressed }) => [
@@ -122,7 +128,9 @@ export default function SupportScreen() {
                 style={styles.kofiButtonImage}
               />
             </Pressable>
-            <Text style={styles.trustText}>{t('support.footer')}</Text>
+            <Text style={[styles.trustText, isRtl && styles.rtlText]}>
+              {t('support.footer')}
+            </Text>
           </Animated.View>
         </ScrollView>
       </SafeAreaView>
@@ -206,6 +214,10 @@ const styles = StyleSheet.create({
     fontSize: 14,
     fontWeight: '600',
     marginTop: 12,
+  },
+  rtlText: {
+    textAlign: 'right',
+    writingDirection: 'rtl',
   },
   button: {
     ...appButtonStyles.primaryButton,

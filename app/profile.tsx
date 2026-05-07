@@ -28,7 +28,7 @@ const genderStorageKey = 'gender';
 const activityLevelStorageKey = 'activityLevel';
 
 export default function ProfileScreen() {
-  const { t } = useI18n();
+  const { isRtl, t } = useI18n();
   const [weight, setWeight] = useState('');
   const [age, setAge] = useState('');
   const [gender, setGender] = useState<string | null>(null);
@@ -127,12 +127,16 @@ export default function ProfileScreen() {
           contentContainerStyle={styles.content}
           keyboardShouldPersistTaps="handled"
         >
-          <Text style={styles.title}>{t('profile.title')}</Text>
+          <Text style={[styles.title, isRtl && styles.rtlText]}>
+            {t('profile.title')}
+          </Text>
 
           <Animated.View style={[styles.card, entranceAnimatedStyle]}>
-            <Text style={styles.label}>{t('profile.weight')}</Text>
+            <Text style={[styles.label, isRtl && styles.rtlText]}>
+              {t('profile.weight')}
+            </Text>
             <TextInput
-              style={styles.input}
+              style={[styles.input, isRtl && styles.rtlText]}
               keyboardType="numeric"
               value={weight}
               onChangeText={setWeight}
@@ -140,9 +144,11 @@ export default function ProfileScreen() {
               placeholderTextColor="#8AA7B6"
             />
 
-            <Text style={styles.label}>{t('profile.age')}</Text>
+            <Text style={[styles.label, isRtl && styles.rtlText]}>
+              {t('profile.age')}
+            </Text>
             <TextInput
-              style={styles.input}
+              style={[styles.input, isRtl && styles.rtlText]}
               keyboardType="numeric"
               value={age}
               onChangeText={handleAgeChange}
@@ -150,8 +156,10 @@ export default function ProfileScreen() {
               placeholderTextColor="#8AA7B6"
             />
 
-            <Text style={styles.label}>{t('profile.gender')}</Text>
-            <View style={styles.options}>
+            <Text style={[styles.label, isRtl && styles.rtlText]}>
+              {t('profile.gender')}
+            </Text>
+            <View style={[styles.options, isRtl && styles.rtlRow]}>
               <TouchableOpacity
                 style={[
                   styles.option,
@@ -162,6 +170,7 @@ export default function ProfileScreen() {
                 <Text
                   style={[
                     styles.optionText,
+                    isRtl && styles.rtlText,
                     gender === 'male' && styles.selectedOptionText,
                   ]}
                 >
@@ -178,6 +187,7 @@ export default function ProfileScreen() {
                 <Text
                   style={[
                     styles.optionText,
+                    isRtl && styles.rtlText,
                     gender === 'female' && styles.selectedOptionText,
                   ]}
                 >
@@ -186,8 +196,10 @@ export default function ProfileScreen() {
               </TouchableOpacity>
             </View>
 
-            <Text style={styles.label}>{t('profile.activityLevel')}</Text>
-            <View style={styles.options}>
+            <Text style={[styles.label, isRtl && styles.rtlText]}>
+              {t('profile.activityLevel')}
+            </Text>
+            <View style={[styles.options, isRtl && styles.rtlRow]}>
               <TouchableOpacity
                 style={[
                   styles.option,
@@ -198,6 +210,7 @@ export default function ProfileScreen() {
                 <Text
                   style={[
                     styles.optionText,
+                    isRtl && styles.rtlText,
                     activityLevel === 'low' && styles.selectedOptionText,
                   ]}
                 >
@@ -214,6 +227,7 @@ export default function ProfileScreen() {
                 <Text
                   style={[
                     styles.optionText,
+                    isRtl && styles.rtlText,
                     activityLevel === 'medium' && styles.selectedOptionText,
                   ]}
                 >
@@ -230,6 +244,7 @@ export default function ProfileScreen() {
                 <Text
                   style={[
                     styles.optionText,
+                    isRtl && styles.rtlText,
                     activityLevel === 'high' && styles.selectedOptionText,
                   ]}
                 >
@@ -238,7 +253,7 @@ export default function ProfileScreen() {
               </TouchableOpacity>
             </View>
 
-            <Text style={styles.settingsActionLabel}>
+            <Text style={[styles.settingsActionLabel, isRtl && styles.rtlText]}>
               {hasSavedSettings
                 ? t('profile.updateSettings')
                 : t('profile.saveSettings')}
@@ -247,7 +262,9 @@ export default function ProfileScreen() {
               label={hasSavedSettings ? t('update') : t('save')}
               onPress={handleSave}
             />
-            <Text style={styles.saveMessage}>{saveMessage}</Text>
+            <Text style={[styles.saveMessage, isRtl && styles.rtlText]}>
+              {saveMessage}
+            </Text>
           </Animated.View>
         </ScrollView>
       </SafeAreaView>
@@ -315,6 +332,13 @@ const styles = StyleSheet.create({
     flexDirection: 'row',
     gap: 10,
     marginBottom: 26,
+  },
+  rtlRow: {
+    flexDirection: 'row-reverse',
+  },
+  rtlText: {
+    textAlign: 'right',
+    writingDirection: 'rtl',
   },
   option: {
     backgroundColor: '#F4FBFF',

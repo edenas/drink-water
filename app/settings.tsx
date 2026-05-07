@@ -61,7 +61,7 @@ function SettingsButton({ label, onPress }: SettingsButtonProps) {
 }
 
 export default function SettingsScreen() {
-  const { language, t } = useI18n();
+  const { isRtl, language, t } = useI18n();
   const [notificationsEnabled, setNotificationsEnabled] = useState(false);
   const [notificationHours, setNotificationHours] = useState('1');
   const [notificationMinutes, setNotificationMinutes] = useState('0');
@@ -279,6 +279,54 @@ export default function SettingsScreen() {
       return t('settings.latvian');
     }
 
+    if (language === 'no') {
+      return t('settings.norwegian');
+    }
+
+    if (language === 'sv') {
+      return t('settings.swedish');
+    }
+
+    if (language === 'es') {
+      return t('settings.spanish');
+    }
+
+    if (language === 'ja') {
+      return t('settings.japanese');
+    }
+
+    if (language === 'zh') {
+      return t('settings.chinese');
+    }
+
+    if (language === 'he') {
+      return t('settings.hebrew');
+    }
+
+    if (language === 'ar') {
+      return t('settings.arabic');
+    }
+
+    if (language === 'ko') {
+      return t('settings.korean');
+    }
+
+    if (language === 'pt') {
+      return t('settings.portuguese');
+    }
+
+    if (language === 'et') {
+      return t('settings.estonian');
+    }
+
+    if (language === 'vi') {
+      return t('settings.vietnamese');
+    }
+
+    if (language === 'sw') {
+      return t('settings.swahili');
+    }
+
     if (language === 'ru') {
       return t('settings.russian');
     }
@@ -337,30 +385,43 @@ export default function SettingsScreen() {
           keyboardShouldPersistTaps="handled"
           onScrollBeginDrag={() => Keyboard.dismiss()}
         >
-          <Text style={styles.title}>{t('settings.title')}</Text>
+          <Text style={[styles.title, isRtl && styles.rtlText]}>
+            {t('settings.title')}
+          </Text>
 
           <Animated.View style={[styles.card, entranceAnimatedStyle]}>
             <Pressable
               style={({ pressed }) => [
                 styles.languageRow,
+                isRtl && styles.rtlRow,
                 pressed && styles.languageRowPressed,
               ]}
               onPress={handleLanguageCardPress}
             >
               <View>
-                <Text style={styles.sectionLabel}>{t('settings.language')}</Text>
-                <Text style={styles.languageValue}>
+                <Text style={[styles.sectionLabel, isRtl && styles.rtlText]}>
+                  {t('settings.language')}
+                </Text>
+                <Text style={[styles.languageValue, isRtl && styles.rtlText]}>
                   {getCurrentLanguageLabel()}
                 </Text>
               </View>
-              <Text style={styles.languageChevron}>›</Text>
+              <Text style={styles.languageChevron}>{isRtl ? '‹' : '›'}</Text>
             </Pressable>
           </Animated.View>
 
           <Animated.View style={[styles.card, entranceAnimatedStyle]}>
-            <Text style={styles.sectionLabel}>{t('settings.waterReminder')}</Text>
-            <View style={styles.reminderToggleRow}>
-              <Text style={styles.reminderLabel}>
+            <Text style={[styles.sectionLabel, isRtl && styles.rtlText]}>
+              {t('settings.waterReminder')}
+            </Text>
+            <View style={[styles.reminderToggleRow, isRtl && styles.rtlRow]}>
+              <Text
+                style={[
+                  styles.reminderLabel,
+                  isRtl && styles.rtlText,
+                  isRtl && styles.rtlReminderLabel,
+                ]}
+              >
                 {t('settings.remindMe')}
               </Text>
               <Switch
@@ -370,9 +431,9 @@ export default function SettingsScreen() {
                 onValueChange={handleNotificationsEnabledChange}
               />
             </View>
-            <View style={styles.reminderInputs}>
+            <View style={[styles.reminderInputs, isRtl && styles.rtlRow]}>
               <View style={styles.reminderInputGroup}>
-                <Text style={styles.reminderInputLabel}>
+                <Text style={[styles.reminderInputLabel, isRtl && styles.rtlText]}>
                   {t('settings.hours')}
                 </Text>
                 <TextInput
@@ -385,7 +446,7 @@ export default function SettingsScreen() {
                 />
               </View>
               <View style={styles.reminderInputGroup}>
-                <Text style={styles.reminderInputLabel}>
+                <Text style={[styles.reminderInputLabel, isRtl && styles.rtlText]}>
                   {t('settings.minutes')}
                 </Text>
                 <TextInput
@@ -405,7 +466,7 @@ export default function SettingsScreen() {
           </Animated.View>
 
           <Animated.View style={[styles.card, entranceAnimatedStyle]}>
-            <Text style={styles.sectionLabel}>
+            <Text style={[styles.sectionLabel, isRtl && styles.rtlText]}>
               {t('settings.statisticsData')}
             </Text>
             <SettingsButton
@@ -415,7 +476,7 @@ export default function SettingsScreen() {
           </Animated.View>
 
           <Animated.View style={[styles.card, entranceAnimatedStyle]}>
-            <Text style={styles.sectionLabel}>
+            <Text style={[styles.sectionLabel, isRtl && styles.rtlText]}>
               {t('settings.userSettings')}
             </Text>
             <SettingsButton
@@ -424,10 +485,12 @@ export default function SettingsScreen() {
             />
           </Animated.View>
 
-          <Text style={styles.saveMessage}>{saveMessage}</Text>
+          <Text style={[styles.saveMessage, isRtl && styles.rtlText]}>
+            {saveMessage}
+          </Text>
 
           <Animated.View style={[styles.card, entranceAnimatedStyle]}>
-            <Text style={styles.sectionLabel}>
+            <Text style={[styles.sectionLabel, isRtl && styles.rtlText]}>
               {t('settings.appInformation')}
             </Text>
             <SettingsButton
@@ -452,11 +515,13 @@ export default function SettingsScreen() {
               resizeMode="contain"
               style={styles.kofiLogo}
             />
-            <Text style={styles.supportTitle}>{t('support.title')}</Text>
-            <Text style={styles.supportMessage}>
+            <Text style={[styles.supportTitle, isRtl && styles.rtlText]}>
+              {t('support.title')}
+            </Text>
+            <Text style={[styles.supportMessage, isRtl && styles.rtlText]}>
               {t('support.message')}
             </Text>
-            <Text style={styles.supportHighlight}>
+            <Text style={[styles.supportHighlight, isRtl && styles.rtlText]}>
               {t('support.highlight')}
             </Text>
             <Pressable
@@ -472,7 +537,9 @@ export default function SettingsScreen() {
                 style={styles.kofiButtonImage}
               />
             </Pressable>
-            <Text style={styles.supportFooter}>{t('support.footer')}</Text>
+            <Text style={[styles.supportFooter, isRtl && styles.rtlText]}>
+              {t('support.footer')}
+            </Text>
           </Animated.View>
         </ScrollView>
       </SafeAreaView>
@@ -611,6 +678,10 @@ const styles = StyleSheet.create({
     fontWeight: '600',
     marginRight: 12,
   },
+  rtlReminderLabel: {
+    marginLeft: 12,
+    marginRight: 0,
+  },
   reminderInputs: {
     flexDirection: 'row',
     gap: 12,
@@ -648,6 +719,13 @@ const styles = StyleSheet.create({
     fontSize: 30,
     fontWeight: '700',
     lineHeight: 30,
+  },
+  rtlRow: {
+    flexDirection: 'row-reverse',
+  },
+  rtlText: {
+    textAlign: 'right',
+    writingDirection: 'rtl',
   },
   saveMessage: {
     color: '#007FB1',

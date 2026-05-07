@@ -31,7 +31,7 @@ function InfoButton({ label, onPress }: { label: string; onPress: () => void }) 
 }
 
 export default function PrivacyPolicyScreen() {
-  const { t } = useI18n();
+  const { isRtl, t } = useI18n();
   const { source } = useLocalSearchParams<{ source?: string }>();
   const entranceAnimation = useRef(new Animated.Value(0)).current;
 
@@ -80,8 +80,12 @@ export default function PrivacyPolicyScreen() {
           <InfoButton label={t('back')} onPress={handleBackPress} />
 
           <Animated.View style={[styles.card, entranceAnimatedStyle]}>
-            <Text style={styles.title}>{t('privacy.title')}</Text>
-            <Text style={styles.bodyText}>{t('privacy.body')}</Text>
+            <Text style={[styles.title, isRtl && styles.rtlText]}>
+              {t('privacy.title')}
+            </Text>
+            <Text style={[styles.bodyText, isRtl && styles.rtlText]}>
+              {t('privacy.body')}
+            </Text>
           </Animated.View>
         </ScrollView>
       </SafeAreaView>
@@ -123,6 +127,10 @@ const styles = StyleSheet.create({
     fontSize: 16,
     fontWeight: '500',
     lineHeight: 24,
+  },
+  rtlText: {
+    textAlign: 'right',
+    writingDirection: 'rtl',
   },
   button: {
     ...appButtonStyles.primaryButton,

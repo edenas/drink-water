@@ -1,4 +1,11 @@
 export function getWaterStatus(waterAmount: number, dailyGoal: number) {
+  if (waterAmount > dailyGoal + 500) {
+    return {
+      statusText: 'careful',
+      statusColor: '#0B3D5C',
+    };
+  }
+
   const progress = waterAmount / dailyGoal;
 
   if (progress < 0.5) {

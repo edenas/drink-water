@@ -18,6 +18,18 @@ const languageOptions: AppLanguage[] = [
   'en',
   'lt',
   'lv',
+  'no',
+  'sv',
+  'es',
+  'ja',
+  'zh',
+  'he',
+  'ar',
+  'ko',
+  'pt',
+  'et',
+  'vi',
+  'sw',
   'ru',
   'fr',
   'de',
@@ -48,7 +60,7 @@ function LanguageButton({
 }
 
 export default function LanguageScreen() {
-  const { language, setLanguage, t } = useI18n();
+  const { isRtl, language, setLanguage, t } = useI18n();
   const entranceAnimation = useRef(new Animated.Value(0)).current;
 
   const getLanguageLabel = (nextLanguage: AppLanguage) => {
@@ -58,6 +70,54 @@ export default function LanguageScreen() {
 
     if (nextLanguage === 'lv') {
       return t('settings.latvian');
+    }
+
+    if (nextLanguage === 'no') {
+      return t('settings.norwegian');
+    }
+
+    if (nextLanguage === 'sv') {
+      return t('settings.swedish');
+    }
+
+    if (nextLanguage === 'es') {
+      return t('settings.spanish');
+    }
+
+    if (nextLanguage === 'ja') {
+      return t('settings.japanese');
+    }
+
+    if (nextLanguage === 'zh') {
+      return t('settings.chinese');
+    }
+
+    if (nextLanguage === 'he') {
+      return t('settings.hebrew');
+    }
+
+    if (nextLanguage === 'ar') {
+      return t('settings.arabic');
+    }
+
+    if (nextLanguage === 'ko') {
+      return t('settings.korean');
+    }
+
+    if (nextLanguage === 'pt') {
+      return t('settings.portuguese');
+    }
+
+    if (nextLanguage === 'et') {
+      return t('settings.estonian');
+    }
+
+    if (nextLanguage === 'vi') {
+      return t('settings.vietnamese');
+    }
+
+    if (nextLanguage === 'sw') {
+      return t('settings.swahili');
     }
 
     if (nextLanguage === 'ru') {
@@ -123,7 +183,14 @@ export default function LanguageScreen() {
           <LanguageButton label={t('back')} onPress={handleBackPress} />
 
           <Animated.View style={[styles.card, entranceAnimatedStyle]}>
-            <Text style={styles.title}>{t('settings.language')}</Text>
+            <Text
+              style={[
+                styles.title,
+                isRtl && styles.rtlText,
+              ]}
+            >
+              {t('settings.language')}
+            </Text>
 
             <View style={styles.languageList}>
               {languageOptions.map((option) => {
@@ -134,6 +201,7 @@ export default function LanguageScreen() {
                     key={option}
                     style={({ pressed }) => [
                       styles.languageRow,
+                      isRtl && styles.rtlRow,
                       isSelected && styles.selectedLanguageRow,
                       pressed && styles.languageRowPressed,
                     ]}
@@ -142,6 +210,7 @@ export default function LanguageScreen() {
                     <Text
                       style={[
                         styles.languageLabel,
+                        isRtl && styles.rtlText,
                         isSelected && styles.selectedLanguageLabel,
                       ]}
                     >
@@ -203,6 +272,9 @@ const styles = StyleSheet.create({
     paddingHorizontal: 16,
     paddingVertical: 14,
   },
+  rtlRow: {
+    flexDirection: 'row-reverse',
+  },
   languageRowPressed: {
     backgroundColor: '#EAF8FF',
   },
@@ -223,6 +295,10 @@ const styles = StyleSheet.create({
     fontSize: 22,
     fontWeight: '800',
     lineHeight: 24,
+  },
+  rtlText: {
+    textAlign: 'right',
+    writingDirection: 'rtl',
   },
   button: {
     ...appButtonStyles.primaryButton,

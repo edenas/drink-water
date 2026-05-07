@@ -158,7 +158,7 @@ const sumMatchingDates = (
   );
 
 export default function StatisticsScreen() {
-  const { t } = useI18n();
+  const { isRtl, t } = useI18n();
   const { width } = useWindowDimensions();
   const chartCardsAnimation = useRef(new Animated.Value(0)).current;
   const [containerWidth, setContainerWidth] = useState(0);
@@ -347,14 +347,22 @@ export default function StatisticsScreen() {
         {!canRenderCharts ? (
           <Animated.View style={[styles.loadingContent, animatedCardStyle]}>
             <ActivityIndicator color="#00AEEF" size="small" />
-            <Text style={styles.loadingText}>{t('statistics.loading')}</Text>
+            <Text style={[styles.loadingText, isRtl && styles.rtlText]}>
+              {t('statistics.loading')}
+            </Text>
           </Animated.View>
         ) : (
           <ScrollView contentContainerStyle={styles.content}>
-            <Text style={styles.title}>{t('statistics.title')}</Text>
+            <Text style={[styles.title, isRtl && styles.rtlText]}>
+              {t('statistics.title')}
+            </Text>
 
-            <Animated.View style={[styles.statRow, animatedCardStyle]}>
-              <Text style={styles.statLabel}>{t('statistics.today')}</Text>
+            <Animated.View
+              style={[styles.statRow, isRtl && styles.rtlRow, animatedCardStyle]}
+            >
+              <Text style={[styles.statLabel, isRtl && styles.rtlText]}>
+                {t('statistics.today')}
+              </Text>
               <Text style={styles.statValue}>{formatLiters(stats.today)}</Text>
             </Animated.View>
 
@@ -385,8 +393,12 @@ export default function StatisticsScreen() {
               )}
             </Animated.View>
 
-            <Animated.View style={[styles.statRow, animatedCardStyle]}>
-              <Text style={styles.statLabel}>{t('statistics.thisWeek')}</Text>
+            <Animated.View
+              style={[styles.statRow, isRtl && styles.rtlRow, animatedCardStyle]}
+            >
+              <Text style={[styles.statLabel, isRtl && styles.rtlText]}>
+                {t('statistics.thisWeek')}
+              </Text>
               <Text style={styles.statValue}>{formatLiters(stats.week)}</Text>
             </Animated.View>
 
@@ -417,8 +429,12 @@ export default function StatisticsScreen() {
               )}
             </Animated.View>
 
-            <Animated.View style={[styles.statRow, animatedCardStyle]}>
-              <Text style={styles.statLabel}>{t('statistics.thisMonth')}</Text>
+            <Animated.View
+              style={[styles.statRow, isRtl && styles.rtlRow, animatedCardStyle]}
+            >
+              <Text style={[styles.statLabel, isRtl && styles.rtlText]}>
+                {t('statistics.thisMonth')}
+              </Text>
               <Text style={styles.statValue}>{formatLiters(stats.month)}</Text>
             </Animated.View>
 
@@ -449,8 +465,12 @@ export default function StatisticsScreen() {
               )}
             </Animated.View>
 
-            <Animated.View style={[styles.statRow, animatedCardStyle]}>
-              <Text style={styles.statLabel}>{t('statistics.thisYear')}</Text>
+            <Animated.View
+              style={[styles.statRow, isRtl && styles.rtlRow, animatedCardStyle]}
+            >
+              <Text style={[styles.statLabel, isRtl && styles.rtlText]}>
+                {t('statistics.thisYear')}
+              </Text>
               <Text style={styles.statValue}>{formatLiters(stats.year)}</Text>
             </Animated.View>
 
@@ -481,8 +501,12 @@ export default function StatisticsScreen() {
               )}
             </Animated.View>
 
-            <Animated.View style={[styles.statRow, animatedCardStyle]}>
-              <Text style={styles.statLabel}>{t('statistics.allTime')}</Text>
+            <Animated.View
+              style={[styles.statRow, isRtl && styles.rtlRow, animatedCardStyle]}
+            >
+              <Text style={[styles.statLabel, isRtl && styles.rtlText]}>
+                {t('statistics.allTime')}
+              </Text>
               <Text style={styles.statValue}>
                 {formatLiters(stats.allTime)}
               </Text>
@@ -630,6 +654,13 @@ const styles = StyleSheet.create({
     color: '#007FB1',
     fontSize: 22,
     fontWeight: '700',
+  },
+  rtlRow: {
+    flexDirection: 'row-reverse',
+  },
+  rtlText: {
+    textAlign: 'right',
+    writingDirection: 'rtl',
   },
 });
 
