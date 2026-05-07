@@ -298,7 +298,10 @@ export default function StatisticsScreen() {
     }, [chartCardsAnimation, loadWaterData])
   );
 
-  const formatLiters = (amount: number) => `${(amount / 1000).toFixed(2)} L`;
+  const literUnit = t('unit.liter');
+  const chartYAxisSuffix = ` ${literUnit}`;
+  const formatLiters = (amount: number) =>
+    `${(amount / 1000).toFixed(2)} ${literUnit}`;
   const layoutWidth = containerWidth || width;
   const chartVisibleWidth = Math.max(layoutWidth - 48, 1);
   const canRenderCharts =
@@ -370,7 +373,7 @@ export default function StatisticsScreen() {
                   width={hourlyChartWidth}
                   height={190}
                   yAxisLabel=""
-                  yAxisSuffix=" L"
+                  yAxisSuffix={chartYAxisSuffix}
                   chartConfig={chartConfig}
                   fromZero
                   showValuesOnTopOfBars
@@ -402,7 +405,7 @@ export default function StatisticsScreen() {
                   width={chartWidth}
                   height={190}
                   yAxisLabel=""
-                  yAxisSuffix=" L"
+                  yAxisSuffix={chartYAxisSuffix}
                   chartConfig={chartConfig}
                   fromZero
                   showValuesOnTopOfBars
@@ -434,7 +437,7 @@ export default function StatisticsScreen() {
                   width={monthlyChartWidth}
                   height={190}
                   yAxisLabel=""
-                  yAxisSuffix=" L"
+                  yAxisSuffix={chartYAxisSuffix}
                   chartConfig={chartConfig}
                   fromZero
                   showValuesOnTopOfBars
@@ -466,7 +469,7 @@ export default function StatisticsScreen() {
                   width={yearlyChartWidth}
                   height={190}
                   yAxisLabel=""
-                  yAxisSuffix=" L"
+                  yAxisSuffix={chartYAxisSuffix}
                   chartConfig={chartConfig}
                   fromZero
                   showValuesOnTopOfBars
@@ -502,7 +505,7 @@ export default function StatisticsScreen() {
                       width={allTimeChartWidth}
                       height={190}
                       yAxisLabel=""
-                      yAxisSuffix=" L"
+                      yAxisSuffix={chartYAxisSuffix}
                       chartConfig={chartConfig}
                       fromZero
                       showValuesOnTopOfBars
@@ -519,7 +522,7 @@ export default function StatisticsScreen() {
                     width={allTimeChartWidth}
                     height={190}
                     yAxisLabel=""
-                    yAxisSuffix=" L"
+                    yAxisSuffix={chartYAxisSuffix}
                     chartConfig={chartConfig}
                     fromZero
                     showValuesOnTopOfBars

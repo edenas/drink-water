@@ -25,7 +25,7 @@ import {
   canUseLocalNotifications,
   getNotificationsModule,
 } from '@/logic/notifications';
-import { AppLanguage, useI18n } from '@/logic/i18n';
+import { useI18n } from '@/logic/i18n';
 
 const weightStorageKey = 'weight';
 const ageStorageKey = 'age';
@@ -61,7 +61,7 @@ function SettingsButton({ label, onPress }: SettingsButtonProps) {
 }
 
 export default function SettingsScreen() {
-  const { language, setLanguage, t } = useI18n();
+  const { language, t } = useI18n();
   const [notificationsEnabled, setNotificationsEnabled] = useState(false);
   const [notificationHours, setNotificationHours] = useState('1');
   const [notificationMinutes, setNotificationMinutes] = useState('0');
@@ -270,9 +270,36 @@ export default function SettingsScreen() {
     setSaveMessage(t('settings.statisticsCleared'));
   };
 
-  const handleLanguagePress = async (nextLanguage: AppLanguage) => {
-    waterAnimationRef.current?.trigger();
-    await setLanguage(nextLanguage);
+  const getCurrentLanguageLabel = () => {
+    if (language === 'lt') {
+      return t('settings.lithuanian');
+    }
+
+    if (language === 'lv') {
+      return t('settings.latvian');
+    }
+
+    if (language === 'ru') {
+      return t('settings.russian');
+    }
+
+    if (language === 'fr') {
+      return t('settings.french');
+    }
+
+    if (language === 'de') {
+      return t('settings.german');
+    }
+
+    if (language === 'pl') {
+      return t('settings.polish');
+    }
+
+    return t('settings.english');
+  };
+
+  const handleLanguageCardPress = () => {
+    router.push('/language');
   };
 
   const handleSupportPress = () => {
@@ -313,34 +340,21 @@ export default function SettingsScreen() {
           <Text style={styles.title}>{t('settings.title')}</Text>
 
           <Animated.View style={[styles.card, entranceAnimatedStyle]}>
-            <Text style={styles.sectionLabel}>{t('settings.language')}</Text>
-            <View style={styles.languageOptions}>
-              {(['en', 'lt'] as AppLanguage[]).map((option) => {
-                const isSelected = language === option;
-
-                return (
-                  <Pressable
-                    key={option}
-                    style={[
-                      styles.languageOption,
-                      isSelected && styles.selectedLanguageOption,
-                    ]}
-                    onPress={() => handleLanguagePress(option)}
-                  >
-                    <Text
-                      style={[
-                        styles.languageOptionText,
-                        isSelected && styles.selectedLanguageOptionText,
-                      ]}
-                    >
-                      {option === 'en'
-                        ? t('settings.english')
-                        : t('settings.lithuanian')}
-                    </Text>
-                  </Pressable>
-                );
-              })}
-            </View>
+            <Pressable
+              style={({ pressed }) => [
+                styles.languageRow,
+                pressed && styles.languageRowPressed,
+              ]}
+              onPress={handleLanguageCardPress}
+            >
+              <View>
+                <Text style={styles.sectionLabel}>{t('settings.language')}</Text>
+                <Text style={styles.languageValue}>
+                  {getCurrentLanguageLabel()}
+                </Text>
+              </View>
+              <Text style={styles.languageChevron}>›</Text>
+            </Pressable>
           </Animated.View>
 
           <Animated.View style={[styles.card, entranceAnimatedStyle]}>
@@ -614,32 +628,26 @@ const styles = StyleSheet.create({
   reminderInput: {
     marginBottom: 0,
   },
-  languageOptions: {
-    flexDirection: 'row',
-    gap: 12,
-    marginTop: 18,
-  },
-  languageOption: {
+  languageRow: {
     alignItems: 'center',
-    backgroundColor: '#F4FBFF',
-    borderColor: '#D4EEF8',
-    borderRadius: 18,
-    borderWidth: 1,
-    flex: 1,
-    paddingHorizontal: 14,
-    paddingVertical: 12,
+    flexDirection: 'row',
+    justifyContent: 'space-between',
+    minHeight: 56,
   },
-  selectedLanguageOption: {
-    backgroundColor: '#00AEEF',
-    borderColor: '#00AEEF',
+  languageRowPressed: {
+    opacity: 0.76,
   },
-  languageOptionText: {
+  languageValue: {
     color: '#24566A',
     fontSize: 16,
-    fontWeight: '700',
+    fontWeight: '600',
+    marginTop: 8,
   },
-  selectedLanguageOptionText: {
-    color: '#ffffff',
+  languageChevron: {
+    color: '#007FB1',
+    fontSize: 30,
+    fontWeight: '700',
+    lineHeight: 30,
   },
   saveMessage: {
     color: '#007FB1',

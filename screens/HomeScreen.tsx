@@ -347,6 +347,7 @@ export default function HomeScreen() {
       | 'status.medium'
       | 'status.good'
       | 'status.perfect';
+  const milliliterUnit = t('unit.ml');
   const animatedProgressWidth = progressAnimation.interpolate({
     inputRange: [0, 100],
     outputRange: [0, 260],
@@ -469,9 +470,11 @@ export default function HomeScreen() {
 
         <Animated.View style={[styles.card, entranceAnimatedStyle]}>
           <Text style={styles.title}>{t('home.today')}</Text>
-          <Text style={styles.waterAmountText}>{waterAmount} ml</Text>
+          <Text style={styles.waterAmountText}>
+            {waterAmount} {milliliterUnit}
+          </Text>
           <Text style={styles.subtitle}>
-            {t('home.dailyGoal')}: {dailyGoal} ml
+            {t('home.dailyGoal')}: {dailyGoal} {milliliterUnit}
           </Text>
           <View style={styles.progressBar}>
             <Animated.View
@@ -500,7 +503,7 @@ export default function HomeScreen() {
                 onFocus={() => setIsEditingWaterStepAmount(true)}
                 selectTextOnFocus
               />
-              <Text style={styles.selectedAmountUnit}>ml</Text>
+              <Text style={styles.selectedAmountUnit}>{milliliterUnit}</Text>
             </View>
           </View>
 

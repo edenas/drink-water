@@ -219,6 +219,14 @@ function TabsLayout() {
           }}
         />
         <Tabs.Screen
+          name="language"
+          options={{
+            href: null,
+            tabBarStyle: styles.hiddenTabBar,
+            title: t('settings.language'),
+          }}
+        />
+        <Tabs.Screen
           name="terms"
           options={{
             href: null,
