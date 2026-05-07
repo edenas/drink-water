@@ -4,10 +4,11 @@ import { router, Tabs, useSegments } from 'expo-router';
 import { useEffect, useState } from 'react';
 import {
   Animated,
+  ActivityIndicator,
   Easing,
+  Image,
   Platform,
   StyleSheet,
-  Text,
   ViewStyle,
   View,
 } from 'react-native';
@@ -267,7 +268,16 @@ function StartupSplash() {
   return (
     <ScreenBackground style={styles.splashContainer}>
       <View style={styles.splashContent}>
-        <Text style={styles.splashTitle}>Drink{'\n'}Water</Text>
+        <Image
+          source={require('../assets/images/splash-logo.png')}
+          resizeMode="contain"
+          style={styles.splashLogo}
+        />
+        <ActivityIndicator
+          color="#00AEEF"
+          size="small"
+          style={styles.splashSpinner}
+        />
       </View>
     </ScreenBackground>
   );
@@ -296,12 +306,15 @@ const styles = StyleSheet.create({
   },
   splashContent: {
     alignItems: 'center',
+    paddingHorizontal: 36,
+    width: '100%',
   },
-  splashTitle: {
-    color: '#00AEEF',
-    fontSize: 58,
-    fontWeight: '800',
-    lineHeight: 62,
-    textAlign: 'center',
+  splashLogo: {
+    height: 220,
+    maxWidth: 420,
+    width: '82%',
+  },
+  splashSpinner: {
+    marginTop: 28,
   },
 });
