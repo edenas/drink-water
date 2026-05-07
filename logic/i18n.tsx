@@ -29,7 +29,8 @@ export type AppLanguage =
   | 'ru'
   | 'fr'
   | 'de'
-  | 'pl';
+  | 'pl'
+  | 'uk';
 
 export const appLanguageStorageKey = 'appLanguage';
 
@@ -2624,6 +2625,143 @@ const translations = {
     'how.settingsText':
       'Zarządzaj przypomnieniami, czyść dane i otwieraj strony wsparcia oraz informacji.',
   },
+  uk: {
+    'app.name': 'Drink Water',
+    'nav.home': 'Головна',
+    'nav.statistics': 'Статистика',
+    'nav.profile': 'Профіль',
+    'nav.settings': 'Налаштування',
+    'nav.terms': 'Умови',
+    'nav.support': 'Підтримка',
+    'nav.disclaimer': 'Застереження',
+    'nav.howToUse': 'Як користуватися',
+    'nav.privacyPolicy': 'Політика конфіденційності',
+    back: 'Назад',
+    save: 'Зберегти',
+    update: 'Оновити',
+    saved: '✓ Збережено',
+    updated: '✓ Оновлено',
+    on: 'УВІМК.',
+    off: 'ВИМК.',
+    'unit.ml': 'мл',
+    'unit.liter': 'л',
+    'home.waterReminder': 'Нагадування\nпро воду',
+    'home.today': 'Сьогодні',
+    'home.dailyGoal': 'Денна ціль',
+    'home.ofDailyGoal': 'з',
+    'home.selectedAmount': 'Вибрана кількість',
+    'home.addWater': 'Додати воду',
+    'notification.title': 'Drink Water',
+    'notification.body': 'Час випити води.',
+    'status.low': 'мало',
+    'status.medium': 'середньо',
+    'status.good': 'добре',
+    'status.perfect': 'ідеально',
+    'status.careful': 'обережно',
+    'profile.title': 'Профіль',
+    'profile.weight': 'Вага',
+    'profile.enterWeight': 'Введіть вагу',
+    'profile.age': 'Вік',
+    'profile.agePlaceholder': 'напр. 30',
+    'profile.gender': 'Стать',
+    'profile.male': 'Чоловіча',
+    'profile.female': 'Жіноча',
+    'profile.activityLevel': 'Рівень активності',
+    'profile.low': 'Низький',
+    'profile.medium': 'Середній',
+    'profile.high': 'Високий',
+    'profile.saveSettings': 'Зберегти налаштування',
+    'profile.updateSettings': 'Оновити налаштування',
+    'settings.title': 'Налаштування',
+    'settings.loading': 'Завантаження налаштувань...',
+    'settings.language': 'Мова',
+    'settings.english': 'English',
+    'settings.lithuanian': 'Lietuvių',
+    'settings.latvian': 'Latviešu',
+    'settings.norwegian': 'Norsk',
+    'settings.swedish': 'Svenska',
+    'settings.spanish': 'Español',
+    'settings.japanese': '日本語',
+    'settings.chinese': '中文',
+    'settings.hebrew': 'עברית',
+    'settings.arabic': 'العربية',
+    'settings.korean': '한국어',
+    'settings.portuguese': 'Português',
+    'settings.estonian': 'Eesti',
+    'settings.vietnamese': 'Tiếng Việt',
+    'settings.swahili': 'Kiswahili',
+    'settings.russian': 'Русский',
+    'settings.french': 'Français',
+    'settings.german': 'Deutsch',
+    'settings.polish': 'Polski',
+    'settings.waterReminder': 'Нагадування про воду',
+    'settings.remindMe': 'Нагадувати мені пити воду',
+    'settings.hours': 'Години',
+    'settings.minutes': 'Хвилини',
+    'settings.statisticsData': 'Дані статистики',
+    'settings.clearStatistics': 'Очистити статистику',
+    'settings.userSettings': 'Налаштування користувача',
+    'settings.clearUserSettings': 'Очистити налаштування користувача',
+    'settings.appInformation': 'Інформація про застосунок',
+    'settings.useAtLeastMinute': 'Вкажіть щонайменше 1 хвилину',
+    'settings.notificationsDenied': 'Дозвіл на сповіщення відхилено',
+    'settings.reminderDisabled': '✓ Нагадування про воду вимкнено',
+    'settings.reminderSaved': '✓ Нагадування про воду збережено',
+    'settings.settingsCleared': '✓ Налаштування очищено',
+    'settings.statisticsCleared': '✓ Статистику очищено',
+    'statistics.title': 'Статистика',
+    'statistics.loading': 'Завантаження статистики...',
+    'statistics.today': 'Сьогодні',
+    'statistics.thisWeek': 'Цього тижня',
+    'statistics.thisMonth': 'Цього місяця',
+    'statistics.thisYear': 'Цього року',
+    'statistics.allTime': 'За весь час',
+    'statistics.swipe': '← Проведіть убік →',
+    'week.mon': 'Пн',
+    'week.tue': 'Вт',
+    'week.wed': 'Ср',
+    'week.thu': 'Чт',
+    'week.fri': 'Пт',
+    'week.sat': 'Сб',
+    'week.sun': 'Нд',
+    'month.jan': 'Січ',
+    'month.feb': 'Лют',
+    'month.mar': 'Бер',
+    'month.apr': 'Кві',
+    'month.may': 'Тра',
+    'month.jun': 'Чер',
+    'month.jul': 'Лип',
+    'month.aug': 'Сер',
+    'month.sep': 'Вер',
+    'month.oct': 'Жов',
+    'month.nov': 'Лис',
+    'month.dec': 'Гру',
+    'support.title': 'Підтримати застосунок',
+    'support.message':
+      'Якщо вам подобається Drink Water, ви можете підтримати розробника й допомогти покращити застосунок.',
+    'support.highlight': 'Кожна кава допомагає',
+    'support.footer': 'Безпечна оплата через Ko-fi',
+    'terms.question': 'Ви погоджуєтеся з умовами застосунку?',
+    'terms.agree': 'Погоджуюся',
+    'terms.disagree': 'Не погоджуюся',
+    'disclaimer.title': 'Застереження',
+    'disclaimer.body':
+      'Drink Water призначений лише для загальної інформації та нагадувань. Це не медична порада, діагноз або лікування.\n\nДенна ціль води в застосунку є лише приблизною оцінкою на основі наданої вами інформації, як-от вага, стать, рівень активності та необов’язковий вік.\n\nІндивідуальні потреби у воді можуть відрізнятися залежно від стану здоров’я, ліків, клімату, харчування, вагітності, фізичної активності та інших чинників.\n\nЯкщо вам потрібна точна особиста порада щодо гідратації, зверніться до кваліфікованого медичного фахівця.\n\nКористуючись цим застосунком, ви розумієте, що самі відповідаєте за свої рішення щодо здоров’я. Розробник не несе відповідальності за будь-які проблеми зі здоров’ям, втрати або шкоду, пов’язані з використанням цього застосунку.',
+    'privacy.title': 'Політика конфіденційності',
+    'privacy.body':
+      'Drink Water не збирає, не зберігає й не надсилає вашу особисту інформацію на зовнішні сервери.\n\nЗастосунок не використовує зовнішню базу даних, систему облікових записів або хмарне сховище.\n\nБудь-яка інформація, яку ви вводите, як-от вага, стать, рівень активності або необов’язковий вік, зберігається лише локально на вашому пристрої. Вона використовується тільки в застосунку для розрахунку приблизної денної цілі води та покращення вашого досвіду.\n\nРозробник не може бачити, отримувати доступ або збирати ваші особисті дані.\n\nВи можете користуватися застосунком без введення особистої інформації профілю. Якщо ви не надасте ці дані, застосунок використовуватиме стандартні значення.\n\nВи можете будь-коли очистити налаштування профілю та дані статистики на екрані Налаштування.\n\nDrink Water призначений лише для загальної інформації та нагадувань. Це не медична порада, діагноз або лікування.\n\nКористуючись цим застосунком, ви розумієте, що самі відповідаєте за свої рішення щодо здоров’я та за інформацію, яку вводите.',
+    'how.title': 'Як користуватися',
+    'how.body':
+      'Використовуйте цей застосунок, щоб відстежувати щоденне споживання води, налаштовувати профіль, переглядати денний прогрес, перевіряти статистику та вмикати необов’язкові нагадування про воду.\n\nЗастосунок допомагає краще помічати звички гідратації, але не замінює професійну медичну пораду.',
+    'how.profileText':
+      'Вкажіть вагу, стать, рівень активності та необов’язковий вік.',
+    'how.homeText':
+      'Виберіть або введіть кількість води й натисніть Додати воду.',
+    'how.statisticsText':
+      'Переглядайте прогрес за день, тиждень, місяць, рік і весь час.',
+    'how.settingsText':
+      'Керуйте нагадуваннями, очищайте дані та відкривайте сторінки підтримки й інформації.',
+  },
 } as const;
 
 const I18nContext = createContext<I18nContextValue>({
@@ -2654,6 +2792,7 @@ const supportedLanguages: AppLanguage[] = [
   'fr',
   'de',
   'pl',
+  'uk',
 ];
 
 const isSupportedLanguage = (
@@ -2738,6 +2877,10 @@ const normalizeLanguage = (language: string | null | undefined): AppLanguage => 
 
   if (normalizedLanguage?.startsWith('pl')) {
     return 'pl';
+  }
+
+  if (normalizedLanguage?.startsWith('uk')) {
+    return 'uk';
   }
 
   return 'en';

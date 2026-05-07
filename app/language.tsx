@@ -14,25 +14,26 @@ import { appButtonStyles } from '@/constants/buttonStyles';
 import { AppLanguage, useI18n } from '@/logic/i18n';
 
 const languageOptions: AppLanguage[] = [
-  'en',
-  'lt',
-  'lv',
-  'no',
-  'sv',
-  'es',
-  'ja',
-  'zh',
-  'he',
   'ar',
-  'ko',
-  'pt',
-  'et',
-  'vi',
-  'sw',
-  'ru',
-  'fr',
   'de',
+  'en',
+  'es',
+  'et',
+  'fr',
+  'sw',
+  'lv',
+  'lt',
+  'no',
   'pl',
+  'pt',
+  'sv',
+  'vi',
+  'uk',
+  'ru',
+  'he',
+  'zh',
+  'ja',
+  'ko',
 ];
 
 function LanguageButton({
@@ -132,6 +133,10 @@ export default function LanguageScreen() {
 
     if (nextLanguage === 'pl') {
       return t('settings.polish');
+    }
+
+    if (nextLanguage === 'uk') {
+      return 'Українська';
     }
 
     return t('settings.english');

@@ -4,6 +4,7 @@ import { useCallback, useState } from 'react';
 import {
   InteractionManager,
   LayoutChangeEvent,
+  Platform,
   ScrollView,
   StyleSheet,
   Text,
@@ -361,207 +362,220 @@ export default function StatisticsScreen() {
   const isYearlyChartScrollable = yearlyChartWidth > chartVisibleWidth;
   const isAllTimeChartScrollable =
     allTimeChart.labels.length > 5 && allTimeChartWidth > chartVisibleWidth;
+  const statRowStyle = [
+    styles.statRow,
+    Platform.OS === 'android' && styles.androidOpaqueCard,
+    isRtl && styles.rtlRow,
+  ];
+  const chartCardStyle = [
+    styles.chartCard,
+    Platform.OS === 'android' && styles.androidOpaqueCard,
+  ];
+  const statisticsContent = (
+    <ScrollView contentContainerStyle={styles.content}>
+      <Text style={[styles.title, isRtl && styles.rtlText]}>
+        {t('statistics.title')}
+      </Text>
+
+      <View style={statRowStyle}>
+        <Text style={[styles.statLabel, isRtl && styles.rtlText]}>
+          {t('statistics.today')}
+        </Text>
+        <Text style={styles.statValue}>{formatLiters(stats.today)}</Text>
+      </View>
+
+      <View style={chartCardStyle}>
+        <ScrollView
+          horizontal
+          contentContainerStyle={styles.chartScrollContent}
+          showsHorizontalScrollIndicator
+        >
+          <BarChart
+            key={`today-${chartRenderKey}`}
+            data={{
+              labels: todayChart.labels,
+              datasets: [{ data: todayChart.values }],
+            }}
+            width={hourlyChartWidth}
+            height={190}
+            yAxisLabel=""
+            yAxisSuffix={chartYAxisSuffix}
+            chartConfig={chartConfig}
+            fromZero
+            showValuesOnTopOfBars
+            style={styles.chart}
+          />
+        </ScrollView>
+        {isHourlyChartScrollable && (
+          <ChartSwipeHint label={t('statistics.swipe')} />
+        )}
+      </View>
+
+      <View style={statRowStyle}>
+        <Text style={[styles.statLabel, isRtl && styles.rtlText]}>
+          {t('statistics.thisWeek')}
+        </Text>
+        <Text style={styles.statValue}>{formatLiters(stats.week)}</Text>
+      </View>
+
+      <View style={chartCardStyle}>
+        <ScrollView
+          horizontal
+          contentContainerStyle={styles.chartScrollContent}
+          showsHorizontalScrollIndicator
+        >
+          <BarChart
+            key={`week-${chartRenderKey}`}
+            data={{
+              labels: weeklyChart.labels,
+              datasets: [{ data: weeklyChart.values }],
+            }}
+            width={chartWidth}
+            height={190}
+            yAxisLabel=""
+            yAxisSuffix={chartYAxisSuffix}
+            chartConfig={chartConfig}
+            fromZero
+            showValuesOnTopOfBars
+            style={styles.chart}
+          />
+        </ScrollView>
+        {isWeeklyChartScrollable && (
+          <ChartSwipeHint label={t('statistics.swipe')} />
+        )}
+      </View>
+
+      <View style={statRowStyle}>
+        <Text style={[styles.statLabel, isRtl && styles.rtlText]}>
+          {t('statistics.thisMonth')}
+        </Text>
+        <Text style={styles.statValue}>{formatLiters(stats.month)}</Text>
+      </View>
+
+      <View style={chartCardStyle}>
+        <ScrollView
+          horizontal
+          contentContainerStyle={styles.chartScrollContent}
+          showsHorizontalScrollIndicator
+        >
+          <BarChart
+            key={`month-${chartRenderKey}`}
+            data={{
+              labels: monthlyChart.labels,
+              datasets: [{ data: monthlyChart.values }],
+            }}
+            width={monthlyChartWidth}
+            height={190}
+            yAxisLabel=""
+            yAxisSuffix={chartYAxisSuffix}
+            chartConfig={chartConfig}
+            fromZero
+            showValuesOnTopOfBars
+            style={styles.chart}
+          />
+        </ScrollView>
+        {isMonthlyChartScrollable && (
+          <ChartSwipeHint label={t('statistics.swipe')} />
+        )}
+      </View>
+
+      <View style={statRowStyle}>
+        <Text style={[styles.statLabel, isRtl && styles.rtlText]}>
+          {t('statistics.thisYear')}
+        </Text>
+        <Text style={styles.statValue}>{formatLiters(stats.year)}</Text>
+      </View>
+
+      <View style={chartCardStyle}>
+        <ScrollView
+          horizontal
+          contentContainerStyle={styles.chartScrollContent}
+          showsHorizontalScrollIndicator
+        >
+          <BarChart
+            key={`year-${chartRenderKey}`}
+            data={{
+              labels: yearlyChart.labels,
+              datasets: [{ data: yearlyChart.values }],
+            }}
+            width={yearlyChartWidth}
+            height={190}
+            yAxisLabel=""
+            yAxisSuffix={chartYAxisSuffix}
+            chartConfig={chartConfig}
+            fromZero
+            showValuesOnTopOfBars
+            style={styles.chart}
+          />
+        </ScrollView>
+        {isYearlyChartScrollable && (
+          <ChartSwipeHint label={t('statistics.swipe')} />
+        )}
+      </View>
+
+      <View style={statRowStyle}>
+        <Text style={[styles.statLabel, isRtl && styles.rtlText]}>
+          {t('statistics.allTime')}
+        </Text>
+        <Text style={styles.statValue}>{formatLiters(stats.allTime)}</Text>
+      </View>
+
+      {allTimeChart.labels.length > 0 && (
+        <View style={chartCardStyle}>
+          {isAllTimeChartScrollable ? (
+            <ScrollView
+              horizontal
+              contentContainerStyle={styles.chartScrollContent}
+              showsHorizontalScrollIndicator
+            >
+              <BarChart
+                key={`all-time-scroll-${chartRenderKey}`}
+                data={{
+                  labels: allTimeChart.labels,
+                  datasets: [{ data: allTimeChart.values }],
+                }}
+                width={allTimeChartWidth}
+                height={190}
+                yAxisLabel=""
+                yAxisSuffix={chartYAxisSuffix}
+                chartConfig={chartConfig}
+                fromZero
+                showValuesOnTopOfBars
+                style={styles.chart}
+              />
+            </ScrollView>
+          ) : (
+            <BarChart
+              key={`all-time-${chartRenderKey}`}
+              data={{
+                labels: allTimeChart.labels,
+                datasets: [{ data: allTimeChart.values }],
+              }}
+              width={allTimeChartWidth}
+              height={190}
+              yAxisLabel=""
+              yAxisSuffix={chartYAxisSuffix}
+              chartConfig={chartConfig}
+              fromZero
+              showValuesOnTopOfBars
+              style={styles.chart}
+            />
+          )}
+        </View>
+      )}
+    </ScrollView>
+  );
+
   return (
     <ScreenBackground>
       <SafeAreaView style={styles.container} onLayout={handleContainerLayout}>
         {!canRenderCharts ? (
           <ScreenLoading />
+        ) : Platform.OS === 'android' ? (
+          statisticsContent
         ) : (
           <AnimatedScreenContent>
-          <ScrollView contentContainerStyle={styles.content}>
-            <Text style={[styles.title, isRtl && styles.rtlText]}>
-              {t('statistics.title')}
-            </Text>
-
-            <View style={[styles.statRow, isRtl && styles.rtlRow]}>
-              <Text style={[styles.statLabel, isRtl && styles.rtlText]}>
-                {t('statistics.today')}
-              </Text>
-              <Text style={styles.statValue}>{formatLiters(stats.today)}</Text>
-            </View>
-
-            <View style={styles.chartCard}>
-              <ScrollView
-                horizontal
-                contentContainerStyle={styles.chartScrollContent}
-                showsHorizontalScrollIndicator
-              >
-                <BarChart
-                  key={`today-${chartRenderKey}`}
-                  data={{
-                    labels: todayChart.labels,
-                    datasets: [{ data: todayChart.values }],
-                  }}
-                  width={hourlyChartWidth}
-                  height={190}
-                  yAxisLabel=""
-                  yAxisSuffix={chartYAxisSuffix}
-                  chartConfig={chartConfig}
-                  fromZero
-                  showValuesOnTopOfBars
-                  style={styles.chart}
-                />
-              </ScrollView>
-              {isHourlyChartScrollable && (
-                <ChartSwipeHint label={t('statistics.swipe')} />
-              )}
-            </View>
-
-            <View style={[styles.statRow, isRtl && styles.rtlRow]}>
-              <Text style={[styles.statLabel, isRtl && styles.rtlText]}>
-                {t('statistics.thisWeek')}
-              </Text>
-              <Text style={styles.statValue}>{formatLiters(stats.week)}</Text>
-            </View>
-
-            <View style={styles.chartCard}>
-              <ScrollView
-                horizontal
-                contentContainerStyle={styles.chartScrollContent}
-                showsHorizontalScrollIndicator
-              >
-                <BarChart
-                  key={`week-${chartRenderKey}`}
-                  data={{
-                    labels: weeklyChart.labels,
-                    datasets: [{ data: weeklyChart.values }],
-                  }}
-                  width={chartWidth}
-                  height={190}
-                  yAxisLabel=""
-                  yAxisSuffix={chartYAxisSuffix}
-                  chartConfig={chartConfig}
-                  fromZero
-                  showValuesOnTopOfBars
-                  style={styles.chart}
-                />
-              </ScrollView>
-              {isWeeklyChartScrollable && (
-                <ChartSwipeHint label={t('statistics.swipe')} />
-              )}
-            </View>
-
-            <View style={[styles.statRow, isRtl && styles.rtlRow]}>
-              <Text style={[styles.statLabel, isRtl && styles.rtlText]}>
-                {t('statistics.thisMonth')}
-              </Text>
-              <Text style={styles.statValue}>{formatLiters(stats.month)}</Text>
-            </View>
-
-            <View style={styles.chartCard}>
-              <ScrollView
-                horizontal
-                contentContainerStyle={styles.chartScrollContent}
-                showsHorizontalScrollIndicator
-              >
-                <BarChart
-                  key={`month-${chartRenderKey}`}
-                  data={{
-                    labels: monthlyChart.labels,
-                    datasets: [{ data: monthlyChart.values }],
-                  }}
-                  width={monthlyChartWidth}
-                  height={190}
-                  yAxisLabel=""
-                  yAxisSuffix={chartYAxisSuffix}
-                  chartConfig={chartConfig}
-                  fromZero
-                  showValuesOnTopOfBars
-                  style={styles.chart}
-                />
-              </ScrollView>
-              {isMonthlyChartScrollable && (
-                <ChartSwipeHint label={t('statistics.swipe')} />
-              )}
-            </View>
-
-            <View style={[styles.statRow, isRtl && styles.rtlRow]}>
-              <Text style={[styles.statLabel, isRtl && styles.rtlText]}>
-                {t('statistics.thisYear')}
-              </Text>
-              <Text style={styles.statValue}>{formatLiters(stats.year)}</Text>
-            </View>
-
-            <View style={styles.chartCard}>
-              <ScrollView
-                horizontal
-                contentContainerStyle={styles.chartScrollContent}
-                showsHorizontalScrollIndicator
-              >
-                <BarChart
-                  key={`year-${chartRenderKey}`}
-                  data={{
-                    labels: yearlyChart.labels,
-                    datasets: [{ data: yearlyChart.values }],
-                  }}
-                  width={yearlyChartWidth}
-                  height={190}
-                  yAxisLabel=""
-                  yAxisSuffix={chartYAxisSuffix}
-                  chartConfig={chartConfig}
-                  fromZero
-                  showValuesOnTopOfBars
-                  style={styles.chart}
-                />
-              </ScrollView>
-              {isYearlyChartScrollable && (
-                <ChartSwipeHint label={t('statistics.swipe')} />
-              )}
-            </View>
-
-            <View style={[styles.statRow, isRtl && styles.rtlRow]}>
-              <Text style={[styles.statLabel, isRtl && styles.rtlText]}>
-                {t('statistics.allTime')}
-              </Text>
-              <Text style={styles.statValue}>
-                {formatLiters(stats.allTime)}
-              </Text>
-            </View>
-
-            {allTimeChart.labels.length > 0 && (
-              <View style={styles.chartCard}>
-                {isAllTimeChartScrollable ? (
-                  <ScrollView
-                    horizontal
-                    contentContainerStyle={styles.chartScrollContent}
-                    showsHorizontalScrollIndicator
-                  >
-                    <BarChart
-                      key={`all-time-scroll-${chartRenderKey}`}
-                      data={{
-                        labels: allTimeChart.labels,
-                        datasets: [{ data: allTimeChart.values }],
-                      }}
-                      width={allTimeChartWidth}
-                      height={190}
-                      yAxisLabel=""
-                      yAxisSuffix={chartYAxisSuffix}
-                      chartConfig={chartConfig}
-                      fromZero
-                      showValuesOnTopOfBars
-                      style={styles.chart}
-                    />
-                  </ScrollView>
-                ) : (
-                  <BarChart
-                    key={`all-time-${chartRenderKey}`}
-                    data={{
-                      labels: allTimeChart.labels,
-                      datasets: [{ data: allTimeChart.values }],
-                    }}
-                    width={allTimeChartWidth}
-                    height={190}
-                    yAxisLabel=""
-                    yAxisSuffix={chartYAxisSuffix}
-                    chartConfig={chartConfig}
-                    fromZero
-                    showValuesOnTopOfBars
-                    style={styles.chart}
-                  />
-                )}
-              </View>
-            )}
-          </ScrollView>
+            {statisticsContent}
           </AnimatedScreenContent>
         )}
       </SafeAreaView>
@@ -639,6 +653,10 @@ const styles = StyleSheet.create({
     },
     shadowOpacity: 0.12,
     shadowRadius: 12,
+  },
+  androidOpaqueCard: {
+    backgroundColor: '#FFFFFF',
+    opacity: 1,
   },
   statLabel: {
     color: '#24566A',

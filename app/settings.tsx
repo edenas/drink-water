@@ -322,6 +322,10 @@ export default function SettingsScreen() {
       return t('settings.polish');
     }
 
+    if (language === 'uk') {
+      return 'Українська';
+    }
+
     return t('settings.english');
   };
 
