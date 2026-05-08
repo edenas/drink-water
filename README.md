@@ -1,50 +1,140 @@
-# Welcome to your Expo app 👋
+# DrinkWater v1.0
 
-This is an [Expo](https://expo.dev) project created with [`create-expo-app`](https://www.npmjs.com/package/create-expo-app).
+A modern water intake tracking app built with React Native + Expo.
 
-## Get started
+DrinkWater helps users track daily hydration, monitor long-term water consumption statistics, and stay hydrated with a clean, lightweight, and user-friendly experience.
 
-1. Install dependencies
+---
 
-   ```bash
-   npm install
-   ```
+## Features
 
-2. Start the app
+* Daily water intake tracking
+* Smart hydration status system
+* Personalized hydration calculations
+* Water reminders & notifications
+* Detailed statistics and charts
+* Long-term hydration history
+* Multi-language support
+* Smooth animations and transitions
+* Offline-first functionality
+* Modern clean UI
+* Lightweight optimized build
 
-   ```bash
-   npx expo start
-   ```
+---
 
-In the output, you'll find options to open the app in a
+## Hydration Status Levels
 
-- [development build](https://docs.expo.dev/develop/development-builds/introduction/)
-- [Android emulator](https://docs.expo.dev/workflow/android-studio-emulator/)
-- [iOS simulator](https://docs.expo.dev/workflow/ios-simulator/)
-- [Expo Go](https://expo.dev/go), a limited sandbox for trying out app development with Expo
+The app dynamically evaluates hydration progress:
 
-You can start developing by editing the files inside the **app** directory. This project uses [file-based routing](https://docs.expo.dev/router/introduction).
+* Low
+* Medium
+* Good
+* Perfect
+* Careful (when intake exceeds the recommended limit)
 
-## Get a fresh project
+---
 
-When you're ready, run:
+## Smart Personalization
 
-```bash
-npm run reset-project
-```
+DrinkWater automatically adapts hydration goals using:
 
-This command will move the starter code to the **app-example** directory and create a blank **app** directory where you can start developing.
+* gender
+* weight
+* activity level
 
-## Learn more
+Default values are used when profile information is not provided.
 
-To learn more about developing your project with Expo, look at the following resources:
+---
 
-- [Expo documentation](https://docs.expo.dev/): Learn fundamentals, or go into advanced topics with our [guides](https://docs.expo.dev/guides).
-- [Learn Expo tutorial](https://docs.expo.dev/tutorial/introduction/): Follow a step-by-step tutorial where you'll create a project that runs on Android, iOS, and the web.
+## Multi-language Support
 
-## Join the community
+Currently supported languages include:
 
-Join our community of developers creating universal apps.
+* English
+* Lithuanian
+* Russian
+* German
+* Spanish
+* Portuguese
+* Norwegian
+* Swedish
+* Finnish
+* Estonian
+* Ukrainian
+* Turkish
+* Arabic (MSA)
+* Hebrew
+* Chinese
+* Japanese
+* Korean
+* Vietnamese
+* Swahili
 
-- [Expo on GitHub](https://github.com/expo/expo): View our open source platform and contribute.
-- [Discord community](https://chat.expo.dev): Chat with Expo users and ask questions.
+The app automatically detects the device language on first launch.
+
+Users can manually change the language anytime in Settings.
+
+---
+
+## Privacy Friendly
+
+DrinkWater is fully offline-first.
+
+The app:
+
+* does NOT upload user data
+* does NOT use tracking analytics
+* does NOT collect personal information
+* stores all hydration data locally on the device
+
+---
+
+## Built With
+
+* React Native
+* Expo
+* TypeScript
+* AsyncStorage
+* React Navigation
+* React Native Chart Kit
+
+---
+
+## APK Download
+
+Download the latest Android APK from the Releases section.
+
+---
+
+## Version
+
+Current version: **v1.0**
+
+---
+
+## Installation
+
+### Android
+
+1. Download the APK
+2. Allow installation from unknown sources if needed
+3. Install and open the app
+
+---
+
+## Future Plans
+
+* Cloud backup
+* Wearable integration
+* Health app synchronization
+* Custom themes
+* More advanced hydration analytics
+
+---
+
+## Developer
+
+Created by Edenas Pocius
+
+Ko-fi support:
+[https://ko-fi.com/edenaspocius](https://ko-fi.com/edenaspocius)
