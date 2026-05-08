@@ -1,6 +1,6 @@
 import AsyncStorage from '@react-native-async-storage/async-storage';
 import { useFocusEffect } from 'expo-router';
-import { useCallback, useState } from 'react';
+import { useCallback, useEffect, useRef, useState } from 'react';
 import {
   InteractionManager,
   LayoutChangeEvent,
@@ -22,6 +22,8 @@ import { useI18n } from '@/logic/i18n';
 const waterHistoryStorageKey = 'waterHistory';
 const hourlyWaterHistoryStorageKey = 'hourlyWaterHistory';
 const allTimeWaterAmountStorageKey = 'allTimeWaterAmount';
+const todayChartInitialHour = 12;
+const hourlyChartBarSlotWidth = 64;
 
 const getDateKey = (date: Date) => date.toISOString().split('T')[0];
 
@@ -104,7 +106,7 @@ const getCurrentMonthChartData = (waterHistory: Record<string, number>) => {
   };
 };
 
-const getLatestYearChartData = (waterHistory: Record<string, number>) => {
+const getAllYearChartData = (waterHistory: Record<string, number>) => {
   const totalsByYear = Object.entries(waterHistory).reduce<
     Record<string, number>
   >((totals, [date, amount]) => {
@@ -119,7 +121,7 @@ const getLatestYearChartData = (waterHistory: Record<string, number>) => {
       [year]: (totals[year] || 0) + amount,
     };
   }, {});
-  const years = Object.keys(totalsByYear).sort().slice(-5);
+  const years = Object.keys(totalsByYear).sort();
 
   return {
     labels: years,
@@ -162,6 +164,8 @@ const sumMatchingDates = (
 export default function StatisticsScreen() {
   const { isRtl, t } = useI18n();
   const { width } = useWindowDimensions();
+  const todayChartScrollRef = useRef<ScrollView>(null);
+  const hasPositionedTodayChartRef = useRef(false);
   const [containerWidth, setContainerWidth] = useState(0);
   const [chartRenderKey, setChartRenderKey] = useState(0);
   const [hasLoadedWaterData, setHasLoadedWaterData] = useState(false);
@@ -255,7 +259,7 @@ export default function StatisticsScreen() {
         ),
       });
       setMonthlyChart(getCurrentMonthChartData(waterHistory));
-      setAllTimeChart(getLatestYearChartData(waterHistory));
+      setAllTimeChart(getAllYearChartData(waterHistory));
     } catch {
       setStats({
         today: 0,
@@ -314,6 +318,7 @@ export default function StatisticsScreen() {
       setHasLoadedWaterData(false);
       loadWaterData();
       setIsScreenReady(false);
+      hasPositionedTodayChartRef.current = false;
 
       const interactionTask = InteractionManager.runAfterInteractions(() => {
         animationFrame = requestAnimationFrame(() => {
@@ -346,7 +351,10 @@ export default function StatisticsScreen() {
   const canRenderCharts =
     hasLoadedWaterData && isScreenReady && chartVisibleWidth > 1;
   const chartWidth = Math.max(chartVisibleWidth, 7 * 58);
-  const hourlyChartWidth = Math.max(chartVisibleWidth, 24 * 64);
+  const hourlyChartWidth = Math.max(
+    chartVisibleWidth,
+    24 * hourlyChartBarSlotWidth
+  );
   const monthlyChartWidth = Math.max(
     chartVisibleWidth,
     monthlyChart.labels.length * 44
@@ -362,6 +370,43 @@ export default function StatisticsScreen() {
   const isYearlyChartScrollable = yearlyChartWidth > chartVisibleWidth;
   const isAllTimeChartScrollable =
     allTimeChart.labels.length > 5 && allTimeChartWidth > chartVisibleWidth;
+
+  useEffect(() => {
+    if (
+      !canRenderCharts ||
+      !isHourlyChartScrollable ||
+      hasPositionedTodayChartRef.current
+    ) {
+      return;
+    }
+
+    const animationFrame = requestAnimationFrame(() => {
+      const targetHourCenter =
+        todayChartInitialHour * hourlyChartBarSlotWidth +
+        hourlyChartBarSlotWidth / 2;
+      const maxOffset = Math.max(hourlyChartWidth - chartVisibleWidth, 0);
+      const centeredOffset = Math.max(
+        0,
+        Math.min(targetHourCenter - chartVisibleWidth / 2, maxOffset)
+      );
+
+      todayChartScrollRef.current?.scrollTo({
+        animated: false,
+        x: centeredOffset,
+        y: 0,
+      });
+      hasPositionedTodayChartRef.current = true;
+    });
+
+    return () => cancelAnimationFrame(animationFrame);
+  }, [
+    canRenderCharts,
+    chartRenderKey,
+    chartVisibleWidth,
+    hourlyChartWidth,
+    isHourlyChartScrollable,
+  ]);
+
   const statRowStyle = [
     styles.statRow,
     Platform.OS === 'android' && styles.androidOpaqueCard,
@@ -386,6 +431,7 @@ export default function StatisticsScreen() {
 
       <View style={chartCardStyle}>
         <ScrollView
+          ref={todayChartScrollRef}
           horizontal
           contentContainerStyle={styles.chartScrollContent}
           showsHorizontalScrollIndicator
@@ -560,6 +606,9 @@ export default function StatisticsScreen() {
               showValuesOnTopOfBars
               style={styles.chart}
             />
+          )}
+          {isAllTimeChartScrollable && (
+            <ChartSwipeHint label={t('statistics.swipe')} />
           )}
         </View>
       )}

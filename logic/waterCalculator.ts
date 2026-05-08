@@ -7,17 +7,11 @@ export function calculateDailyWaterGoal(
   activityLevel: ActivityLevel | string | null,
   age?: string | number | null
 ) {
-  if (!weight || !gender || !activityLevel) {
-    return 2000;
-  }
-
   const weightNumber = Number(weight);
-
-  if (!weightNumber) {
-    return 2000;
-  }
-
-  let dailyGoal = gender === 'female' ? weightNumber * 30 : weightNumber * 35;
+  let dailyGoal =
+    weight !== null && weight !== undefined && weight !== '' && weightNumber > 0
+      ? weightNumber * (gender === 'female' ? 30 : 35)
+      : 2000;
 
   if (activityLevel === 'medium') {
     dailyGoal += 500;

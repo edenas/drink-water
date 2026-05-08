@@ -1,4 +1,5 @@
 import AsyncStorage from '@react-native-async-storage/async-storage';
+import * as Localization from 'expo-localization';
 import {
   createContext,
   ReactNode,
@@ -8,7 +9,6 @@ import {
   useMemo,
   useState,
 } from 'react';
-import { NativeModules, Platform } from 'react-native';
 
 export type AppLanguage =
   | 'en'
@@ -2939,106 +2939,18 @@ const isSupportedLanguage = (
 ): language is AppLanguage =>
   supportedLanguages.includes(language as AppLanguage);
 
-const normalizeLanguage = (language: string | null | undefined): AppLanguage => {
-  const normalizedLanguage = language?.toLowerCase();
-
-  if (normalizedLanguage?.startsWith('lt')) {
-    return 'lt';
-  }
-
-  if (normalizedLanguage?.startsWith('lv')) {
-    return 'lv';
-  }
-
-  if (
-    normalizedLanguage?.startsWith('no') ||
-    normalizedLanguage?.startsWith('nb') ||
-    normalizedLanguage?.startsWith('nn')
-  ) {
-    return 'no';
-  }
-
-  if (normalizedLanguage?.startsWith('sv')) {
-    return 'sv';
-  }
-
-  if (normalizedLanguage?.startsWith('es')) {
-    return 'es';
-  }
-
-  if (normalizedLanguage?.startsWith('ja')) {
-    return 'ja';
-  }
-
-  if (normalizedLanguage?.startsWith('zh')) {
-    return 'zh';
-  }
-
-  if (normalizedLanguage?.startsWith('he')) {
-    return 'he';
-  }
-
-  if (normalizedLanguage?.startsWith('ar')) {
-    return 'ar';
-  }
-
-  if (normalizedLanguage?.startsWith('ko')) {
-    return 'ko';
-  }
-
-  if (normalizedLanguage?.startsWith('pt')) {
-    return 'pt';
-  }
-
-  if (normalizedLanguage?.startsWith('et')) {
-    return 'et';
-  }
-
-  if (normalizedLanguage?.startsWith('vi')) {
-    return 'vi';
-  }
-
-  if (normalizedLanguage?.startsWith('sw')) {
-    return 'sw';
-  }
-
-  if (normalizedLanguage?.startsWith('ru')) {
-    return 'ru';
-  }
-
-  if (normalizedLanguage?.startsWith('fr')) {
-    return 'fr';
-  }
-
-  if (normalizedLanguage?.startsWith('de')) {
-    return 'de';
-  }
-
-  if (normalizedLanguage?.startsWith('pl')) {
-    return 'pl';
-  }
-
-  if (normalizedLanguage?.startsWith('uk')) {
-    return 'uk';
-  }
-
-  if (normalizedLanguage?.startsWith('fi')) {
-    return 'fi';
-  }
-
-  return 'en';
+const languageCodeAliases: Partial<Record<string, AppLanguage>> = {
+  nb: 'no',
+  nn: 'no',
 };
 
-const getDeviceLanguage = () => {
-  if (Platform.OS === 'ios') {
-    const settings = NativeModules.SettingsManager?.settings;
-    return settings?.AppleLocale ?? settings?.AppleLanguages?.[0];
-  }
+const getSupportedLanguage = (
+  locale: string | null | undefined
+): AppLanguage | undefined => {
+  const languageCode = locale?.split(/[-_]/)[0]?.toLowerCase();
+  const mappedLanguage = languageCodeAliases[languageCode ?? ''] ?? languageCode;
 
-  return (
-    NativeModules.I18nManager?.localeIdentifier ??
-    NativeModules.I18nManager?.locale
-  );
+  return isSupportedLanguage(mappedLanguage) ? mappedLanguage : undefined;
 };
 
 export function I18nProvider({ children }: { children: ReactNode }) {
@@ -3048,14 +2960,13 @@ export function I18nProvider({ children }: { children: ReactNode }) {
   useEffect(() => {
     const loadLanguage = async () => {
       const savedLanguage = await AsyncStorage.getItem(appLanguageStorageKey);
+      const primaryLocale = Localization.getLocales()[0];
+      const deviceLocale =
+        primaryLocale?.languageTag ?? primaryLocale?.languageCode;
       const nextLanguage =
-        isSupportedLanguage(savedLanguage)
-          ? savedLanguage
-          : normalizeLanguage(getDeviceLanguage());
-
-      if (!isSupportedLanguage(savedLanguage)) {
-        await AsyncStorage.setItem(appLanguageStorageKey, nextLanguage);
-      }
+        getSupportedLanguage(savedLanguage) ??
+        getSupportedLanguage(deviceLocale) ??
+        'en';
 
       setLanguageState(nextLanguage);
       setHasLoadedLanguage(true);

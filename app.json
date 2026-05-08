@@ -1,6 +1,6 @@
 {
   "expo": {
-    "name": "Drink Water",
+    "name": "DrinkWater",
     "slug": "drink-water",
     "version": "1.0.0",
     "orientation": "portrait",
@@ -41,7 +41,8 @@
             "backgroundColor": "#EAF8FF"
           }
         }
-      ]
+      ],
+      "expo-localization"
     ],
     "experiments": {
       "typedRoutes": true,

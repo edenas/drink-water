@@ -15,6 +15,7 @@ import {
 import { SafeAreaView } from 'react-native-safe-area-context';
 
 import AnimatedScreenContent from '@/components/AnimatedScreenContent';
+import AppToast from '@/components/AppToast';
 import ScreenBackground from '@/components/ScreenBackground';
 import ScreenLoading from '@/components/ScreenLoading';
 import WaterBackgroundAnimation, {
@@ -34,7 +35,7 @@ export default function ProfileScreen() {
   const [age, setAge] = useState('');
   const [gender, setGender] = useState<string | null>(null);
   const [activityLevel, setActivityLevel] = useState<string | null>(null);
-  const [saveMessage, setSaveMessage] = useState('');
+  const [toast, setToast] = useState({ id: 0, message: '' });
   const [hasSavedSettings, setHasSavedSettings] = useState(false);
   const [hasLoadedSettings, setHasLoadedSettings] = useState(false);
   const waterAnimationRef = useRef<WaterBackgroundAnimationRef>(null);
@@ -81,6 +82,20 @@ export default function ProfileScreen() {
     }, [])
   );
 
+  const showToast = useCallback((message: string) => {
+    setToast((currentToast) => ({
+      id: currentToast.id + 1,
+      message,
+    }));
+  }, []);
+
+  const hideToast = useCallback(() => {
+    setToast((currentToast) => ({
+      ...currentToast,
+      message: '',
+    }));
+  }, []);
+
   const handleSave = async () => {
     waterAnimationRef.current?.trigger();
     Keyboard.dismiss();
@@ -92,12 +107,16 @@ export default function ProfileScreen() {
     await AsyncStorage.setItem(activityLevelStorageKey, activityLevel || '');
 
     setHasSavedSettings(true);
-    setSaveMessage(message);
+    showToast(message);
   };
 
   const handleGenderPress = (value: string) => {
     Keyboard.dismiss();
     setGender(value);
+  };
+
+  const handleWeightChange = (value: string) => {
+    setWeight(value.replace(/\D/g, ''));
   };
 
   const handleAgeChange = (value: string) => {
@@ -134,7 +153,7 @@ export default function ProfileScreen() {
               style={[styles.input, isRtl && styles.rtlText]}
               keyboardType="numeric"
               value={weight}
-              onChangeText={setWeight}
+              onChangeText={handleWeightChange}
               placeholder={t('profile.enterWeight')}
               placeholderTextColor="#8AA7B6"
             />
@@ -257,13 +276,16 @@ export default function ProfileScreen() {
               label={hasSavedSettings ? t('update') : t('save')}
               onPress={handleSave}
             />
-            <Text style={[styles.saveMessage, isRtl && styles.rtlText]}>
-              {saveMessage}
-            </Text>
             </View>
           </ScrollView>
         </AnimatedScreenContent>
       </SafeAreaView>
+      <AppToast
+        id={toast.id}
+        isRtl={isRtl}
+        message={toast.message}
+        onHide={hideToast}
+      />
     </ScreenBackground>
   );
 
@@ -369,11 +391,5 @@ const styles = StyleSheet.create({
     fontSize: 14,
     fontWeight: '600',
     marginTop: 2,
-  },
-  saveMessage: {
-    color: '#007FB1',
-    fontSize: 17,
-    fontWeight: '700',
-    marginTop: 14,
   },
 });

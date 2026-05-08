@@ -3,6 +3,7 @@ import { router, useLocalSearchParams } from 'expo-router';
 import { useEffect, useState } from 'react';
 import {
   ActivityIndicator,
+  Image,
   Pressable,
   StyleSheet,
   Text,
@@ -87,7 +88,11 @@ export default function TermsScreen() {
           )}
 
           <View style={styles.logoGroup}>
-            <Text style={styles.splashTitle}>Drink{'\n'}Water</Text>
+            <Image
+              source={require('../assets/images/splash-logo.png')}
+              resizeMode="contain"
+              style={styles.splashLogo}
+            />
             {isInitialLoading ? (
               <ActivityIndicator
                 color="#00AEEF"
@@ -95,7 +100,7 @@ export default function TermsScreen() {
                 style={styles.loader}
               />
             ) : (
-              <View style={styles.staticLoader} />
+              <View style={styles.loaderSpacer} />
             )}
           </View>
 
@@ -171,25 +176,20 @@ const styles = StyleSheet.create({
   },
   logoGroup: {
     alignItems: 'center',
+    paddingHorizontal: 36,
+    width: '100%',
   },
-  splashTitle: {
-    color: '#00AEEF',
-    fontSize: 58,
-    fontWeight: '800',
-    lineHeight: 62,
-    textAlign: 'center',
+  splashLogo: {
+    height: 220,
+    maxWidth: 420,
+    width: '82%',
   },
   loader: {
-    marginTop: 24,
+    marginTop: 28,
   },
-  staticLoader: {
-    borderColor: '#BDEEFF',
-    borderRadius: 9,
-    borderTopColor: '#00AEEF',
-    borderWidth: 2,
+  loaderSpacer: {
     height: 18,
-    marginTop: 24,
-    width: 18,
+    marginTop: 28,
   },
   card: {
     backgroundColor: 'rgba(255, 255, 255, 0.95)',

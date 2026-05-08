@@ -16,6 +16,7 @@ import {
 import { SafeAreaView } from 'react-native-safe-area-context';
 
 import AnimatedScreenContent from '@/components/AnimatedScreenContent';
+import AppToast from '@/components/AppToast';
 import ScreenBackground from '@/components/ScreenBackground';
 import ScreenLoading from '@/components/ScreenLoading';
 import WaterBackgroundAnimation, {
@@ -66,7 +67,7 @@ export default function SettingsScreen() {
   const [notificationsEnabled, setNotificationsEnabled] = useState(false);
   const [notificationHours, setNotificationHours] = useState('1');
   const [notificationMinutes, setNotificationMinutes] = useState('0');
-  const [saveMessage, setSaveMessage] = useState('');
+  const [toast, setToast] = useState({ id: 0, message: '' });
   const [hasLoadedSettings, setHasLoadedSettings] = useState(false);
   const waterAnimationRef = useRef<WaterBackgroundAnimationRef>(null);
 
@@ -103,9 +104,23 @@ export default function SettingsScreen() {
 
   }, []);
 
+  const showToast = useCallback((message: string) => {
+    setToast((currentToast) => ({
+      id: currentToast.id + 1,
+      message,
+    }));
+  }, []);
+
+  const hideToast = useCallback(() => {
+    setToast((currentToast) => ({
+      ...currentToast,
+      message: '',
+    }));
+  }, []);
+
   useEffect(() => {
-    setSaveMessage('');
-  }, [language]);
+    hideToast();
+  }, [hideToast, language]);
 
   useFocusEffect(
     useCallback(() => {
@@ -138,7 +153,7 @@ export default function SettingsScreen() {
     const intervalSeconds = getNotificationIntervalSeconds();
 
     if (intervalSeconds < 60) {
-      setSaveMessage(t('settings.useAtLeastMinute'));
+      showToast(t('settings.useAtLeastMinute'));
       return false;
     }
 
@@ -155,7 +170,7 @@ export default function SettingsScreen() {
     const permission = await Notifications.requestPermissionsAsync();
 
     if (!permission.granted) {
-      setSaveMessage(t('settings.notificationsDenied'));
+      showToast(t('settings.notificationsDenied'));
       return false;
     }
 
@@ -185,7 +200,7 @@ export default function SettingsScreen() {
       if (Notifications !== null) {
         await Notifications.cancelAllScheduledNotificationsAsync();
       }
-      setSaveMessage(t('settings.reminderDisabled'));
+      showToast(t('settings.reminderDisabled'));
     }
   };
 
@@ -209,14 +224,14 @@ export default function SettingsScreen() {
       if (Notifications !== null) {
         await Notifications.cancelAllScheduledNotificationsAsync();
       }
-      setSaveMessage(t('settings.reminderSaved'));
+      showToast(t('settings.reminderSaved'));
       return;
     }
 
     const didSchedule = await scheduleNotifications();
 
     if (didSchedule) {
-      setSaveMessage(t('settings.reminderSaved'));
+      showToast(t('settings.reminderSaved'));
     }
   };
 
@@ -231,7 +246,7 @@ export default function SettingsScreen() {
       activityLevelStorageKey,
     ]);
 
-    setSaveMessage(t('settings.settingsCleared'));
+    showToast(t('settings.settingsCleared'));
   };
 
   const handleClearStatistics = async () => {
@@ -246,7 +261,7 @@ export default function SettingsScreen() {
       lastSavedDateStorageKey,
     ]);
 
-    setSaveMessage(t('settings.statisticsCleared'));
+    showToast(t('settings.statisticsCleared'));
   };
 
   const getCurrentLanguageLabel = () => {
@@ -477,10 +492,6 @@ export default function SettingsScreen() {
             />
           </View>
 
-          <Text style={[styles.saveMessage, isRtl && styles.rtlText]}>
-            {saveMessage}
-          </Text>
-
           <View style={styles.card}>
             <Text style={[styles.sectionLabel, isRtl && styles.rtlText]}>
               {t('settings.appInformation')}
@@ -534,6 +545,12 @@ export default function SettingsScreen() {
           </ScrollView>
         </AnimatedScreenContent>
       </SafeAreaView>
+      <AppToast
+        id={toast.id}
+        isRtl={isRtl}
+        message={toast.message}
+        onHide={hideToast}
+      />
     </ScreenBackground>
   );
 }
@@ -717,11 +734,5 @@ const styles = StyleSheet.create({
   rtlText: {
     textAlign: 'right',
     writingDirection: 'rtl',
-  },
-  saveMessage: {
-    color: '#007FB1',
-    fontSize: 17,
-    fontWeight: '700',
-    marginTop: 6,
   },
 });
