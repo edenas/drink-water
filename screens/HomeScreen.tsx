@@ -815,12 +815,14 @@ export default function HomeScreen() {
           </View>
 
           <View style={styles.addWaterActions}>
-            <WaterButton
-              label={t('home.addWater')}
-              onPress={addWater}
-              buttonStyle={styles.addWaterButton}
-              textStyle={styles.addWaterButtonText}
-            />
+            <View style={styles.addWaterButtonWrapper}>
+              <WaterButton
+                label={t('home.addWater')}
+                onPress={addWater}
+                buttonStyle={styles.addWaterButton}
+                textStyle={styles.addWaterButtonText}
+              />
+            </View>
             <Pressable
               accessibilityRole="button"
               accessibilityState={{ disabled: !canUndoAddWater }}
@@ -1165,16 +1167,21 @@ const styles = StyleSheet.create({
     flexDirection: 'row',
     gap: 12,
     justifyContent: 'center',
-    maxWidth: 340,
     width: '100%',
+  },
+  addWaterButtonWrapper: {
+    flexGrow: 1,
+    flexShrink: 0,
+    maxWidth: 320,
+    minWidth: 220,
+    width: '70%',
   },
   addWaterButton: {
     borderRadius: 16,
-    flex: 1,
-    flexShrink: 0,
     height: 48,
     marginTop: 8,
-    minWidth: 220,
+    paddingHorizontal: 24,
+    width: '100%',
   },
   addWaterButtonText: {
     fontSize: 16,
@@ -1188,6 +1195,7 @@ const styles = StyleSheet.create({
     elevation: 3,
     height: 46,
     justifyContent: 'center',
+    flexShrink: 0,
     marginTop: 8,
     shadowColor: '#6CAFD0',
     shadowOffset: {
