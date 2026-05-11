@@ -16,6 +16,7 @@ import { SafeAreaView } from 'react-native-safe-area-context';
 
 import AnimatedScreenContent from '@/components/AnimatedScreenContent';
 import AppToast from '@/components/AppToast';
+import CenteredPageContainer from '@/components/CenteredPageContainer';
 import ScreenBackground from '@/components/ScreenBackground';
 import ScreenLoading from '@/components/ScreenLoading';
 import WaterBackgroundAnimation, {
@@ -138,14 +139,16 @@ export default function ProfileScreen() {
       <SafeAreaView style={styles.container}>
         <AnimatedScreenContent>
           <ScrollView
+            style={styles.scroll}
             contentContainerStyle={styles.content}
             keyboardShouldPersistTaps="handled"
           >
-            <Text style={[styles.title, isRtl && styles.rtlText]}>
-              {t('profile.title')}
-            </Text>
+            <CenteredPageContainer>
+              <Text style={[styles.title, isRtl && styles.rtlText]}>
+                {t('profile.title')}
+              </Text>
 
-            <View style={styles.card}>
+              <View style={styles.card}>
             <Text style={[styles.label, isRtl && styles.rtlText]}>
               {t('profile.weight')}
             </Text>
@@ -276,7 +279,8 @@ export default function ProfileScreen() {
               label={hasSavedSettings ? t('update') : t('save')}
               onPress={handleSave}
             />
-            </View>
+              </View>
+            </CenteredPageContainer>
           </ScrollView>
         </AnimatedScreenContent>
       </SafeAreaView>
@@ -303,8 +307,15 @@ export default function ProfileScreen() {
 const styles = StyleSheet.create({
   container: {
     flex: 1,
+    width: '100%',
+  },
+  scroll: {
+    flex: 1,
+    width: '100%',
   },
   content: {
+    alignItems: 'center',
+    flexGrow: 1,
     padding: 20,
     paddingBottom: 80,
   },

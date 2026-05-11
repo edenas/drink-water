@@ -91,5 +91,6 @@ export default function AnimatedScreenContent({
 const styles = StyleSheet.create({
   content: {
     flex: 1,
+    width: '100%',
   },
 });

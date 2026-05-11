@@ -17,6 +17,7 @@ import { SafeAreaView } from 'react-native-safe-area-context';
 
 import AnimatedScreenContent from '@/components/AnimatedScreenContent';
 import AppToast from '@/components/AppToast';
+import CenteredPageContainer from '@/components/CenteredPageContainer';
 import ScreenBackground from '@/components/ScreenBackground';
 import ScreenLoading from '@/components/ScreenLoading';
 import WaterBackgroundAnimation, {
@@ -25,7 +26,18 @@ import WaterBackgroundAnimation, {
 import { appButtonStyles } from '@/constants/buttonStyles';
 import {
   canUseLocalNotifications,
+  defaultNotificationEndTime,
+  defaultNotificationStartTime,
+  formatReminderTimeInput,
   getNotificationsModule,
+  normalizeReminderTime,
+  notificationEndTimeStorageKey,
+  notificationHoursStorageKey,
+  notificationMinutesStorageKey,
+  notificationStartTimeStorageKey,
+  notificationsEnabledStorageKey,
+  requestWaterReminderNotificationPermission,
+  scheduleWaterReminderNotifications,
 } from '@/logic/notifications';
 import { useI18n } from '@/logic/i18n';
 
@@ -38,9 +50,6 @@ const allTimeWaterAmountStorageKey = 'allTimeWaterAmount';
 const waterHistoryStorageKey = 'waterHistory';
 const hourlyWaterHistoryStorageKey = 'hourlyWaterHistory';
 const lastSavedDateStorageKey = 'lastSavedDate';
-const notificationsEnabledStorageKey = 'notificationsEnabled';
-const notificationHoursStorageKey = 'notificationHours';
-const notificationMinutesStorageKey = 'notificationMinutes';
 const kofiUrl = 'https://ko-fi.com/edenaspocius';
 
 type SettingsButtonProps = {
@@ -67,6 +76,12 @@ export default function SettingsScreen() {
   const [notificationsEnabled, setNotificationsEnabled] = useState(false);
   const [notificationHours, setNotificationHours] = useState('1');
   const [notificationMinutes, setNotificationMinutes] = useState('0');
+  const [notificationStartTime, setNotificationStartTime] = useState(
+    defaultNotificationStartTime
+  );
+  const [notificationEndTime, setNotificationEndTime] = useState(
+    defaultNotificationEndTime
+  );
   const [toast, setToast] = useState({ id: 0, message: '' });
   const [hasLoadedSettings, setHasLoadedSettings] = useState(false);
   const waterAnimationRef = useRef<WaterBackgroundAnimationRef>(null);
@@ -82,6 +97,12 @@ export default function SettingsScreen() {
       const savedNotificationMinutes = await AsyncStorage.getItem(
         notificationMinutesStorageKey
       );
+      const savedNotificationStartTime = await AsyncStorage.getItem(
+        notificationStartTimeStorageKey
+      );
+      const savedNotificationEndTime = await AsyncStorage.getItem(
+        notificationEndTimeStorageKey
+      );
 
       if (savedNotificationsEnabled !== null) {
         setNotificationsEnabled(savedNotificationsEnabled === 'true');
@@ -94,10 +115,25 @@ export default function SettingsScreen() {
       if (savedNotificationMinutes !== null) {
         setNotificationMinutes(savedNotificationMinutes);
       }
+
+      setNotificationStartTime(
+        normalizeReminderTime(
+          savedNotificationStartTime ?? defaultNotificationStartTime,
+          defaultNotificationStartTime
+        )
+      );
+      setNotificationEndTime(
+        normalizeReminderTime(
+          savedNotificationEndTime ?? defaultNotificationEndTime,
+          defaultNotificationEndTime
+        )
+      );
     } catch {
       setNotificationsEnabled(false);
       setNotificationHours('1');
       setNotificationMinutes('0');
+      setNotificationStartTime(defaultNotificationStartTime);
+      setNotificationEndTime(defaultNotificationEndTime);
     } finally {
       setHasLoadedSettings(true);
     }
@@ -142,6 +178,26 @@ export default function SettingsScreen() {
     setNotificationMinutes(value.replace(/\D/g, ''));
   };
 
+  const handleNotificationStartTimeChange = (value: string) => {
+    setNotificationStartTime(formatReminderTimeInput(value));
+  };
+
+  const handleNotificationEndTimeChange = (value: string) => {
+    setNotificationEndTime(formatReminderTimeInput(value));
+  };
+
+  const handleNotificationStartTimeBlur = () => {
+    setNotificationStartTime(
+      normalizeReminderTime(notificationStartTime, defaultNotificationStartTime)
+    );
+  };
+
+  const handleNotificationEndTimeBlur = () => {
+    setNotificationEndTime(
+      normalizeReminderTime(notificationEndTime, defaultNotificationEndTime)
+    );
+  };
+
   const getNotificationIntervalSeconds = () => {
     const hours = Number(notificationHours) || 0;
     const minutes = Number(notificationMinutes) || 0;
@@ -151,6 +207,14 @@ export default function SettingsScreen() {
 
   const scheduleNotifications = async () => {
     const intervalSeconds = getNotificationIntervalSeconds();
+    const normalizedStartTime = normalizeReminderTime(
+      notificationStartTime,
+      defaultNotificationStartTime
+    );
+    const normalizedEndTime = normalizeReminderTime(
+      notificationEndTime,
+      defaultNotificationEndTime
+    );
 
     if (intervalSeconds < 60) {
       showToast(t('settings.useAtLeastMinute'));
@@ -167,27 +231,28 @@ export default function SettingsScreen() {
       return true;
     }
 
-    const permission = await Notifications.requestPermissionsAsync();
+    const hasPermission = await requestWaterReminderNotificationPermission(
+      Notifications
+    );
 
-    if (!permission.granted) {
+    if (!hasPermission) {
       showToast(t('settings.notificationsDenied'));
       return false;
     }
 
-    await Notifications.cancelAllScheduledNotificationsAsync();
-    await Notifications.scheduleNotificationAsync({
-      content: {
-        title: t('notification.title'),
-        body: t('notification.body'),
-      },
-      trigger: {
-        type: Notifications.SchedulableTriggerInputTypes.TIME_INTERVAL,
-        seconds: intervalSeconds,
-        repeats: true,
-      },
+    const didSchedule = await scheduleWaterReminderNotifications({
+      body: t('notification.body'),
+      endTime: normalizedEndTime,
+      intervalSeconds,
+      startTime: normalizedStartTime,
+      title: t('notification.title'),
     });
 
-    return true;
+    if (!didSchedule) {
+      showToast('Use a valid active time range');
+    }
+
+    return didSchedule;
   };
 
   const handleNotificationsEnabledChange = async (value: boolean) => {
@@ -207,6 +272,17 @@ export default function SettingsScreen() {
   const handleSaveNotifications = async () => {
     waterAnimationRef.current?.trigger();
     Keyboard.dismiss();
+    const normalizedStartTime = normalizeReminderTime(
+      notificationStartTime,
+      defaultNotificationStartTime
+    );
+    const normalizedEndTime = normalizeReminderTime(
+      notificationEndTime,
+      defaultNotificationEndTime
+    );
+
+    setNotificationStartTime(normalizedStartTime);
+    setNotificationEndTime(normalizedEndTime);
 
     await AsyncStorage.setItem(
       notificationsEnabledStorageKey,
@@ -216,6 +292,14 @@ export default function SettingsScreen() {
     await AsyncStorage.setItem(
       notificationMinutesStorageKey,
       notificationMinutes
+    );
+    await AsyncStorage.setItem(
+      notificationStartTimeStorageKey,
+      normalizedStartTime
+    );
+    await AsyncStorage.setItem(
+      notificationEndTimeStorageKey,
+      normalizedEndTime
     );
 
     if (!notificationsEnabled) {
@@ -387,16 +471,18 @@ export default function SettingsScreen() {
       <SafeAreaView style={styles.container}>
         <AnimatedScreenContent>
           <ScrollView
+            style={styles.scroll}
             contentContainerStyle={styles.content}
             keyboardDismissMode="on-drag"
             keyboardShouldPersistTaps="handled"
             onScrollBeginDrag={() => Keyboard.dismiss()}
           >
-          <Text style={[styles.title, isRtl && styles.rtlText]}>
-            {t('settings.title')}
-          </Text>
+          <CenteredPageContainer>
+            <Text style={[styles.title, isRtl && styles.rtlText]}>
+              {t('settings.title')}
+            </Text>
 
-          <View style={styles.card}>
+            <View style={styles.card}>
             <Pressable
               style={({ pressed }) => [
                 styles.languageRow,
@@ -415,9 +501,9 @@ export default function SettingsScreen() {
               </View>
               <Text style={styles.languageChevron}>{isRtl ? '‹' : '›'}</Text>
             </Pressable>
-          </View>
+            </View>
 
-          <View style={styles.card}>
+            <View style={styles.card}>
             <Text style={[styles.sectionLabel, isRtl && styles.rtlText]}>
               {t('settings.waterReminder')}
             </Text>
@@ -466,13 +552,43 @@ export default function SettingsScreen() {
                 />
               </View>
             </View>
+            <View style={[styles.activeHoursInputs, isRtl && styles.rtlRow]}>
+              <View style={styles.reminderInputGroup}>
+                <Text style={[styles.reminderInputLabel, isRtl && styles.rtlText]}>
+                  Start time
+                </Text>
+                <TextInput
+                  style={[styles.input, styles.reminderInput]}
+                  keyboardType="numeric"
+                  value={notificationStartTime}
+                  onBlur={handleNotificationStartTimeBlur}
+                  onChangeText={handleNotificationStartTimeChange}
+                  placeholder={defaultNotificationStartTime}
+                  placeholderTextColor="#8AA7B6"
+                />
+              </View>
+              <View style={styles.reminderInputGroup}>
+                <Text style={[styles.reminderInputLabel, isRtl && styles.rtlText]}>
+                  End time
+                </Text>
+                <TextInput
+                  style={[styles.input, styles.reminderInput]}
+                  keyboardType="numeric"
+                  value={notificationEndTime}
+                  onBlur={handleNotificationEndTimeBlur}
+                  onChangeText={handleNotificationEndTimeChange}
+                  placeholder={defaultNotificationEndTime}
+                  placeholderTextColor="#8AA7B6"
+                />
+              </View>
+            </View>
             <SettingsButton
               label={t('save')}
               onPress={handleSaveNotifications}
             />
-          </View>
+            </View>
 
-          <View style={styles.card}>
+            <View style={styles.card}>
             <Text style={[styles.sectionLabel, isRtl && styles.rtlText]}>
               {t('settings.statisticsData')}
             </Text>
@@ -480,9 +596,9 @@ export default function SettingsScreen() {
               label={t('settings.clearStatistics')}
               onPress={handleClearStatistics}
             />
-          </View>
+            </View>
 
-          <View style={styles.card}>
+            <View style={styles.card}>
             <Text style={[styles.sectionLabel, isRtl && styles.rtlText]}>
               {t('settings.userSettings')}
             </Text>
@@ -490,9 +606,9 @@ export default function SettingsScreen() {
               label={t('settings.clearUserSettings')}
               onPress={handleClearUserSettings}
             />
-          </View>
+            </View>
 
-          <View style={styles.card}>
+            <View style={styles.card}>
             <Text style={[styles.sectionLabel, isRtl && styles.rtlText]}>
               {t('settings.appInformation')}
             </Text>
@@ -508,9 +624,9 @@ export default function SettingsScreen() {
               label={t('nav.privacyPolicy')}
               onPress={handlePrivacyPolicyPress}
             />
-          </View>
+            </View>
 
-          <View style={[styles.card, styles.donationCard]}>
+            <View style={[styles.card, styles.donationCard]}>
             <Image
               source={require('../assets/kofi_logo.png')}
               resizeMode="contain"
@@ -541,7 +657,8 @@ export default function SettingsScreen() {
             <Text style={[styles.supportFooter, isRtl && styles.rtlText]}>
               {t('support.footer')}
             </Text>
-          </View>
+            </View>
+          </CenteredPageContainer>
           </ScrollView>
         </AnimatedScreenContent>
       </SafeAreaView>
@@ -558,8 +675,15 @@ export default function SettingsScreen() {
 const styles = StyleSheet.create({
   container: {
     flex: 1,
+    width: '100%',
+  },
+  scroll: {
+    flex: 1,
+    width: '100%',
   },
   content: {
+    alignItems: 'center',
+    flexGrow: 1,
     padding: 20,
     paddingBottom: 80,
   },
@@ -693,6 +817,12 @@ const styles = StyleSheet.create({
   reminderInputs: {
     flexDirection: 'row',
     gap: 12,
+    marginTop: 18,
+  },
+  activeHoursInputs: {
+    flexDirection: 'row',
+    gap: 12,
+    marginBottom: 22,
     marginTop: 18,
   },
   reminderInputGroup: {

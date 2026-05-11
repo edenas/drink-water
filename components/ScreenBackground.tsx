@@ -20,6 +20,7 @@ const styles = StyleSheet.create({
   container: {
     flex: 1,
     backgroundColor: '#EAF8FF',
+    width: '100%',
   },
   topWash: {
     position: 'absolute',

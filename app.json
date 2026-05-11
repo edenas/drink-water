@@ -3,7 +3,7 @@
     "name": "DrinkWater",
     "slug": "drink-water",
     "version": "1.0.0",
-    "orientation": "portrait",
+    "orientation": "default",
     "icon": "./assets/images/app-icon.png",
     "scheme": "drinkwater",
     "userInterfaceStyle": "automatic",
@@ -15,7 +15,7 @@
     },
     "android": {
       "package": "com.edenaspocius.drinkwater",
-      "versionCode": 2,
+      "versionCode": 3,
       "adaptiveIcon": {
         "backgroundColor": "#E6F4FE",
         "foregroundImage": "./assets/images/app-icon.png",
@@ -47,6 +47,12 @@
     "experiments": {
       "typedRoutes": true,
       "reactCompiler": true
+    },
+    "extra": {
+      "router": {},
+      "eas": {
+        "projectId": "977b4b3e-3a73-4c8c-9d15-3030a18c8435"
+      }
     }
   }
 }

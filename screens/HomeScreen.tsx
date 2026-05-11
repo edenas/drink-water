@@ -1,4 +1,5 @@
 import AsyncStorage from '@react-native-async-storage/async-storage';
+import { Ionicons } from '@expo/vector-icons';
 import { useFocusEffect } from 'expo-router';
 import { useCallback, useEffect, useRef, useState } from 'react';
 import {
@@ -12,6 +13,7 @@ import {
   Text,
   TextInput,
   View,
+  useWindowDimensions,
 } from 'react-native';
 import Svg, {
   Circle,
@@ -26,6 +28,7 @@ import Svg, {
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 
 import AnimatedScreenContent from '@/components/AnimatedScreenContent';
+import CenteredPageContainer from '@/components/CenteredPageContainer';
 import ScreenBackground from '@/components/ScreenBackground';
 import ScreenLoading from '@/components/ScreenLoading';
 import WaterBackgroundAnimation, {
@@ -35,7 +38,16 @@ import WaterButton from '@/components/WaterButton';
 import { calculateDailyWaterGoal } from '@/logic/waterCalculator';
 import {
   canUseLocalNotifications,
+  defaultNotificationEndTime,
+  defaultNotificationStartTime,
   getNotificationsModule,
+  notificationEndTimeStorageKey,
+  notificationHoursStorageKey,
+  notificationMinutesStorageKey,
+  notificationStartTimeStorageKey,
+  notificationsEnabledStorageKey,
+  requestWaterReminderNotificationPermission,
+  scheduleWaterReminderNotifications,
 } from '@/logic/notifications';
 import { useI18n } from '@/logic/i18n';
 import { getWaterStatus } from '@/logic/waterStatus';
@@ -53,17 +65,28 @@ const weightStorageKey = 'weight';
 const ageStorageKey = 'age';
 const genderStorageKey = 'gender';
 const activityLevelStorageKey = 'activityLevel';
-const notificationsEnabledStorageKey = 'notificationsEnabled';
-const notificationHoursStorageKey = 'notificationHours';
-const notificationMinutesStorageKey = 'notificationMinutes';
 const progressCircleSize = 206;
 const progressCircleStrokeWidth = 18;
 
+type UndoEntry = {
+  date: string;
+  hour: string;
+  previousAllTimeWaterAmount: number;
+  previousHourlyAmount: number;
+  previousWaterAmount: number;
+  previousWaterHistoryAmount: number;
+  hadHourlyDate: boolean;
+  hadHourlyHour: boolean;
+  hadWaterHistoryDate: boolean;
+};
+
 export default function HomeScreen() {
   const { isRtl, t } = useI18n();
+  const { height, width } = useWindowDimensions();
   const insets = useSafeAreaInsets();
   const topContentInset = Math.max(insets.top * 0.2, 8);
   const bottomContentInset = Math.max(insets.bottom * 0.5, 14);
+  const isWideLayout = width >= 850 && width > height;
   const [waterAmount, setWaterAmount] = useState(0);
   const [allTimeWaterAmount, setAllTimeWaterAmount] = useState(0);
   const [waterHistory, setWaterHistory] = useState<Record<string, number>>({});
@@ -84,6 +107,7 @@ export default function HomeScreen() {
   const [waterStepControlAmount, setWaterStepControlAmount] = useState(
     defaultWaterStepAmount
   );
+  const [undoHistory, setUndoHistory] = useState<UndoEntry[]>([]);
   const [isEditingWaterStepAmount, setIsEditingWaterStepAmount] =
     useState(false);
   const sliderWidthRef = useRef(0);
@@ -245,6 +269,12 @@ export default function HomeScreen() {
     const savedNotificationMinutes = await AsyncStorage.getItem(
       notificationMinutesStorageKey
     );
+    const savedNotificationStartTime = await AsyncStorage.getItem(
+      notificationStartTimeStorageKey
+    );
+    const savedNotificationEndTime = await AsyncStorage.getItem(
+      notificationEndTimeStorageKey
+    );
     const hours = Number(savedNotificationHours ?? '1') || 0;
     const minutes = Number(savedNotificationMinutes ?? '0') || 0;
     const intervalSeconds = hours * 60 * 60 + minutes * 60;
@@ -253,26 +283,20 @@ export default function HomeScreen() {
       return;
     }
 
-    const currentPermission = await Notifications.getPermissionsAsync();
-    const permission = currentPermission.granted
-      ? currentPermission
-      : await Notifications.requestPermissionsAsync();
+    const hasPermission = await requestWaterReminderNotificationPermission(
+      Notifications
+    );
 
-    if (!permission.granted) {
+    if (!hasPermission) {
       return;
     }
 
-    await Notifications.cancelAllScheduledNotificationsAsync();
-    await Notifications.scheduleNotificationAsync({
-      content: {
-        title: t('notification.title'),
-        body: t('notification.body'),
-      },
-      trigger: {
-        type: Notifications.SchedulableTriggerInputTypes.TIME_INTERVAL,
-        seconds: intervalSeconds,
-        repeats: true,
-      },
+    await scheduleWaterReminderNotifications({
+      body: t('notification.body'),
+      endTime: savedNotificationEndTime ?? defaultNotificationEndTime,
+      intervalSeconds,
+      startTime: savedNotificationStartTime ?? defaultNotificationStartTime,
+      title: t('notification.title'),
     });
   };
 
@@ -423,8 +447,32 @@ export default function HomeScreen() {
   const addWater = () => {
     const today = getTodayDate();
     const currentHour = String(new Date().getHours());
+    const todayHourlyHistory = hourlyWaterHistory[today] || {};
 
     waterAnimationRef.current?.trigger();
+    setUndoHistory((currentHistory) => [
+      ...currentHistory,
+      {
+        date: today,
+        hour: currentHour,
+        previousAllTimeWaterAmount: allTimeWaterAmount,
+        previousHourlyAmount: todayHourlyHistory[currentHour] || 0,
+        previousWaterAmount: waterAmount,
+        previousWaterHistoryAmount: waterHistory[today] || 0,
+        hadHourlyDate: Object.prototype.hasOwnProperty.call(
+          hourlyWaterHistory,
+          today
+        ),
+        hadHourlyHour: Object.prototype.hasOwnProperty.call(
+          todayHourlyHistory,
+          currentHour
+        ),
+        hadWaterHistoryDate: Object.prototype.hasOwnProperty.call(
+          waterHistory,
+          today
+        ),
+      },
+    ]);
     setWaterAmount(waterAmount + waterStepAmount);
     setAllTimeWaterAmount(allTimeWaterAmount + waterStepAmount);
     setWaterHistory({
@@ -441,6 +489,56 @@ export default function HomeScreen() {
       },
     });
   };
+
+  const undoLastAddWater = () => {
+    const lastUndoEntry = undoHistory[undoHistory.length - 1];
+
+    if (lastUndoEntry === undefined) {
+      return;
+    }
+
+    waterAnimationRef.current?.trigger();
+    setUndoHistory((currentHistory) => currentHistory.slice(0, -1));
+    setWaterAmount(lastUndoEntry.previousWaterAmount);
+    setAllTimeWaterAmount(lastUndoEntry.previousAllTimeWaterAmount);
+    setWaterHistory((currentHistory) => {
+      const nextHistory = { ...currentHistory };
+
+      if (lastUndoEntry.hadWaterHistoryDate) {
+        nextHistory[lastUndoEntry.date] =
+          lastUndoEntry.previousWaterHistoryAmount;
+      } else {
+        delete nextHistory[lastUndoEntry.date];
+      }
+
+      return nextHistory;
+    });
+    setHourlyWaterHistory((currentHistory) => {
+      const nextHistory = { ...currentHistory };
+
+      if (!lastUndoEntry.hadHourlyDate) {
+        delete nextHistory[lastUndoEntry.date];
+        return nextHistory;
+      }
+
+      const nextHourlyDateHistory = {
+        ...(nextHistory[lastUndoEntry.date] || {}),
+      };
+
+      if (lastUndoEntry.hadHourlyHour) {
+        nextHourlyDateHistory[lastUndoEntry.hour] =
+          lastUndoEntry.previousHourlyAmount;
+      } else {
+        delete nextHourlyDateHistory[lastUndoEntry.hour];
+      }
+
+      nextHistory[lastUndoEntry.date] = nextHourlyDateHistory;
+
+      return nextHistory;
+    });
+  };
+
+  const canUndoAddWater = undoHistory.length > 0;
 
   if (!hasLoadedStorage) {
     return <ScreenLoading />;
@@ -466,6 +564,9 @@ export default function HomeScreen() {
               paddingBottom: bottomContentInset,
             },
           ]}
+        >
+        <CenteredPageContainer
+          style={[styles.page, isWideLayout && styles.widePage]}
         >
         <Animated.View
           style={[
@@ -516,7 +617,16 @@ export default function HomeScreen() {
           </View>
         </Animated.View>
 
-        <Animated.View style={[styles.card, styles.todayCard]}>
+        <View
+          style={[styles.cardStack, isWideLayout && styles.cardRow]}
+        >
+        <Animated.View
+          style={[
+            styles.card,
+            styles.todayCard,
+            isWideLayout && styles.wideCard,
+          ]}
+        >
           <Text style={styles.title}>{t('home.today')}</Text>
 
           <View style={styles.progressCircleWrapper}>
@@ -647,7 +757,13 @@ export default function HomeScreen() {
           </Text>
         </Animated.View>
 
-        <Animated.View style={[styles.card, styles.addWaterCard]}>
+        <Animated.View
+          style={[
+            styles.card,
+            styles.addWaterCard,
+            isWideLayout && styles.wideCard,
+          ]}
+        >
           <Text style={styles.addWaterTitle}>{t('home.addWater')}</Text>
 
           <View style={styles.selectedAmountInputRow}>
@@ -698,15 +814,35 @@ export default function HomeScreen() {
             </Pressable>
           </View>
 
-          <View style={styles.addWaterButtonWrapper}>
+          <View style={styles.addWaterActions}>
             <WaterButton
               label={t('home.addWater')}
               onPress={addWater}
               buttonStyle={styles.addWaterButton}
               textStyle={styles.addWaterButtonText}
             />
+            <Pressable
+              accessibilityRole="button"
+              accessibilityState={{ disabled: !canUndoAddWater }}
+              accessibilityLabel="Undo last add water"
+              disabled={!canUndoAddWater}
+              style={({ pressed }) => [
+                styles.undoButton,
+                !canUndoAddWater && styles.undoButtonDisabled,
+                pressed && canUndoAddWater && styles.undoButtonPressed,
+              ]}
+              onPress={undoLastAddWater}
+            >
+              <Ionicons
+                name="arrow-undo"
+                color={canUndoAddWater ? '#007FB1' : '#8AA7B6'}
+                size={22}
+              />
+            </Pressable>
           </View>
         </Animated.View>
+        </View>
+        </CenteredPageContainer>
         </ScrollView>
       </AnimatedScreenContent>
     </ScreenBackground>
@@ -718,8 +854,10 @@ const styles = StyleSheet.create({
     flex: 1,
     alignItems: 'center',
     paddingHorizontal: 18,
+    width: '100%',
   },
   animatedContent: {
+    flex: 1,
     width: '100%',
   },
   notificationToggle: {
@@ -795,16 +933,32 @@ const styles = StyleSheet.create({
   },
   scroll: {
     flex: 1,
-    maxWidth: 400,
     width: '100%',
   },
   content: {
+    alignItems: 'center',
     flexGrow: 1,
     gap: 12,
     justifyContent: 'center',
-    maxWidth: 400,
     minHeight: '100%',
     width: '100%',
+  },
+  page: {
+    gap: 12,
+    width: '100%',
+  },
+  widePage: {
+    maxWidth: 1100,
+  },
+  cardStack: {
+    gap: 12,
+    width: '100%',
+  },
+  cardRow: {
+    alignItems: 'center',
+    flexDirection: 'row',
+    gap: 32,
+    justifyContent: 'center',
   },
   card: {
     alignItems: 'center',
@@ -821,6 +975,12 @@ const styles = StyleSheet.create({
     shadowOpacity: 0.12,
     shadowRadius: 20,
     width: '100%',
+  },
+  wideCard: {
+    flex: 1,
+    maxWidth: 520,
+    minWidth: 320,
+    width: 'auto',
   },
   todayCard: {
     paddingBottom: 24,
@@ -999,17 +1159,51 @@ const styles = StyleSheet.create({
     shadowOpacity: 0.16,
     shadowRadius: 9,
   },
-  addWaterButtonWrapper: {
+  addWaterActions: {
+    alignItems: 'center',
     alignSelf: 'center',
-    width: '70%',
+    flexDirection: 'row',
+    gap: 12,
+    justifyContent: 'center',
+    maxWidth: 340,
+    width: '100%',
   },
   addWaterButton: {
     borderRadius: 16,
+    flex: 1,
+    flexShrink: 0,
     height: 48,
     marginTop: 8,
+    minWidth: 220,
   },
   addWaterButtonText: {
     fontSize: 16,
+  },
+  undoButton: {
+    alignItems: 'center',
+    backgroundColor: '#F4FBFF',
+    borderColor: '#BFEAFF',
+    borderRadius: 999,
+    borderWidth: 1,
+    elevation: 3,
+    height: 46,
+    justifyContent: 'center',
+    marginTop: 8,
+    shadowColor: '#6CAFD0',
+    shadowOffset: {
+      width: 0,
+      height: 6,
+    },
+    shadowOpacity: 0.12,
+    shadowRadius: 10,
+    width: 46,
+  },
+  undoButtonDisabled: {
+    opacity: 0.42,
+  },
+  undoButtonPressed: {
+    backgroundColor: '#EAF8FF',
+    transform: [{ scale: 0.96 }],
   },
   rtlRow: {
     flexDirection: 'row-reverse',

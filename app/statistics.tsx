@@ -15,6 +15,7 @@ import { BarChart } from 'react-native-chart-kit';
 import { SafeAreaView } from 'react-native-safe-area-context';
 
 import AnimatedScreenContent from '@/components/AnimatedScreenContent';
+import CenteredPageContainer from '@/components/CenteredPageContainer';
 import ScreenBackground from '@/components/ScreenBackground';
 import ScreenLoading from '@/components/ScreenLoading';
 import { useI18n } from '@/logic/i18n';
@@ -417,10 +418,11 @@ export default function StatisticsScreen() {
     Platform.OS === 'android' && styles.androidOpaqueCard,
   ];
   const statisticsContent = (
-    <ScrollView contentContainerStyle={styles.content}>
-      <Text style={[styles.title, isRtl && styles.rtlText]}>
-        {t('statistics.title')}
-      </Text>
+    <ScrollView style={styles.scroll} contentContainerStyle={styles.content}>
+      <CenteredPageContainer onLayout={handleContainerLayout}>
+        <Text style={[styles.title, isRtl && styles.rtlText]}>
+          {t('statistics.title')}
+        </Text>
 
       <View style={statRowStyle}>
         <Text style={[styles.statLabel, isRtl && styles.rtlText]}>
@@ -566,8 +568,8 @@ export default function StatisticsScreen() {
         <Text style={styles.statValue}>{formatLiters(stats.allTime)}</Text>
       </View>
 
-      {allTimeChart.labels.length > 0 && (
-        <View style={chartCardStyle}>
+        {allTimeChart.labels.length > 0 && (
+          <View style={chartCardStyle}>
           {isAllTimeChartScrollable ? (
             <ScrollView
               horizontal
@@ -610,14 +612,15 @@ export default function StatisticsScreen() {
           {isAllTimeChartScrollable && (
             <ChartSwipeHint label={t('statistics.swipe')} />
           )}
-        </View>
-      )}
+          </View>
+        )}
+      </CenteredPageContainer>
     </ScrollView>
   );
 
   return (
     <ScreenBackground>
-      <SafeAreaView style={styles.container} onLayout={handleContainerLayout}>
+      <SafeAreaView style={styles.container}>
         {!canRenderCharts ? (
           <ScreenLoading />
         ) : Platform.OS === 'android' ? (
@@ -635,8 +638,15 @@ export default function StatisticsScreen() {
 const styles = StyleSheet.create({
   container: {
     flex: 1,
+    width: '100%',
+  },
+  scroll: {
+    flex: 1,
+    width: '100%',
   },
   content: {
+    alignItems: 'center',
+    flexGrow: 1,
     padding: 20,
     paddingBottom: 80,
   },
